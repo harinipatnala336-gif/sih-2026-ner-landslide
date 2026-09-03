@@ -27,3 +27,7 @@ Thumbs.db
 .vscode/
 .idea/
 *.log
+
+backend/venv/
+backend/__pycache__/
+backend/*.db
