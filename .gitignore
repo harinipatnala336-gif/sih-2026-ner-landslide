@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.env
+venv/
+env/
+.venv/
+
+# Node / Web
+node_modules/
+dist/
+build/
+.npm/
+
+# Mobile (Flutter / React Native)
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+android/.gradle
+ios/Pods/
+.expo/
+
+# OS & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
