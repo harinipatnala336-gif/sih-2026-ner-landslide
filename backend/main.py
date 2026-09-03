@@ -194,6 +194,15 @@ def get_contacts():
         "police": "112"
     }
 
+# Endpoint for Member 4 (Live Weather Telemetry)
+@app.get("/api/live-weather")
+def get_live_weather(location: str = "Mangan (North Sikkim)"):
+    """
+    Fetches live rainfall & atmospheric conditions for NER hotspots (Member 4).
+    """
+    from weather_service import fetch_live_weather
+    return fetch_live_weather(location)
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
