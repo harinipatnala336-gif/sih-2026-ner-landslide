@@ -9,6 +9,19 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
 import datetime
+import os
+import pickle
+
+# --- LOAD MEMBER 3'S TRAINED AI MODEL ---
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "landslide_model.pkl")
+ai_model = None
+if os.path.exists(MODEL_PATH):
+    try:
+        with open(MODEL_PATH, "rb") as f:
+            ai_model = pickle.load(f)
+        print("[AI Engine] Real Random Forest Model (Member 3) loaded successfully!")
+    except Exception as e:
+        print(f"[WARN] Could not load model: {e}")
 
 app = FastAPI(
     title="DharaRakshak NER API",
@@ -117,26 +130,32 @@ def get_all_hotspots():
 @app.post("/api/predict-risk")
 def predict_landslide_risk(data: PredictionRequest):
     """
-    Computes landslide probability using terrain & weather triggers.
-    (Member 3 can plug their model.pkl here)
+    Computes landslide probability using Member 3's real Random Forest AI model.
     """
-    # Normalized heuristic / ML placeholder formula
-    score = (data.rainfall_mm * 0.35) + (data.slope_deg * 0.40) + (data.soil_moisture_pct * 0.25)
-    normalized_risk = min(100.0, max(0.0, score * 0.9))
-    
-    level = "SAFE"
-    if normalized_risk >= 80:
-        level = "CRITICAL"
-    elif normalized_risk >= 60:
-        level = "WARNING"
-    elif normalized_risk >= 40:
-        level = "MODERATE"
+    if ai_model is not None:
+        features = [[data.rainfall_mm, data.slope_deg, data.soil_moisture_pct, data.elevation_m]]
+        prediction = ai_model.predict(features)[0]
+        probabilities = ai_model.predict_proba(features)[0]
+        risk_pct = round(float(probabilities[1]) * 100, 1) if len(probabilities) > 1 else (100.0 if prediction == 1 else 0.0)
 
-    return {
-        "risk_score": round(normalized_risk, 1),
-        "threat_level": level,
-        "trigger_primary": "Extreme Precipitation" if data.rainfall_mm > 100 else "Steep Slope Angle"
-    }
+        level = "CRITICAL" if risk_pct >= 75 else "WARNING" if risk_pct >= 45 else "SAFE"
+        return {
+            "model_engine": "Random Forest AI (Trained by Member 3)",
+            "landslide_predicted": bool(prediction == 1),
+            "risk_score_pct": risk_pct,
+            "threat_level": level,
+            "primary_trigger": "Extreme Precipitation" if data.rainfall_mm > 120 else "Himalayan Slope Instability"
+        }
+    else:
+        score = (data.rainfall_mm * 0.35) + (data.slope_deg * 0.40) + (data.soil_moisture_pct * 0.25)
+        normalized_risk = min(100.0, max(0.0, score * 0.9))
+        level = "CRITICAL" if normalized_risk >= 80 else "WARNING" if normalized_risk >= 60 else "SAFE"
+        return {
+            "model_engine": "Heuristic Rule Fallback",
+            "landslide_predicted": normalized_risk >= 60,
+            "risk_score_pct": round(normalized_risk, 1),
+            "threat_level": level
+        }
 
 # Endpoint for Member 5 (Mobile App Reporting)
 @app.post("/api/report-incident")
@@ -165,6 +184,14 @@ def trigger_sms_alert(alert: AlertBroadcastRequest):
         "district": alert.district,
         "dispatched_towers": 24,
         "message": alert.message
+    }
+
+@app.get("/api/emergency-contacts")
+def get_contacts():
+    return {
+        "ndrf_helpline": "1078",
+        "disaster_mgmt_ner": "0361-2237011",
+        "police": "112"
     }
 
 if __name__ == "__main__":
