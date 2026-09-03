@@ -1040,7 +1040,7 @@
     }
 
     // Auto-sync with Member 2 Backend API if running
-    fetch('http://localhost:8000/api/hotspots')
+      fetch('https://dhararakshak-backend.onrender.com/api/hotspots')
       .then(res => res.json())
       .then(data => {
         if (data.hotspots && data.hotspots.length > 0) {
@@ -1080,24 +1080,41 @@
       document.getElementById('reportModal').style.display = 'none';
     }
 
-    function submitReportSuccess() {
-      closeReportModal();
-      showToast("✅ Incident Verified & Queued", "Photo processed by YOLOv8. Report synced with District Emergency Operations.");
-      
-      const feed = document.getElementById('incidentFeed');
-      const newCard = document.createElement('div');
-      newCard.className = 'incident-card';
-      newCard.style.borderLeftColor = '#3b82f6';
-      newCard.innerHTML = `
-        <div class="incident-meta">
-          <span>📍 NH-10 Km 42 (Teesta)</span>
-          <span>Just now</span>
-        </div>
-        <div style="font-weight: 600; color: #93c5fd;">Fresh Road Crack / Subsidence</div>
-        <div style="font-size: 9px; color: #9ca3af;">Citizen ID: #APP-USER • Offline Cache synced</div>
-      `;
-      feed.insertBefore(newCard, feed.firstChild);
-    }
+   function submitReportSuccess() {
+  closeReportModal();
+
+  fetch('https://dhararakshak-backend.onrender.com/api/report-incident', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      latitude: 27.0945,
+      longitude: 88.5284,
+      hazard_type: "Fresh Road Crack / Subsidence",
+      description: "Reported via GeoAlert Citizen app"
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    showToast("✅ Incident Verified & Queued", "Report synced with District Emergency Operations.");
+    const feed = document.getElementById('incidentFeed');
+    const newCard = document.createElement('div');
+    newCard.className = 'incident-card';
+    newCard.style.borderLeftColor = '#3b82f6';
+    newCard.innerHTML = `
+      <div class="incident-meta">
+        <span>📍 NH-10 Km 42 (Teesta)</span>
+        <span>Just now</span>
+      </div>
+      <div style="font-weight: 600; color: #93c5fd;">Fresh Road Crack / Subsidence</div>
+      <div style="font-size: 9px; color: #9ca3af;">Report ID: #${data.incident.id} • Saved to backend</div>
+    `;
+    feed.insertBefore(newCard, feed.firstChild);
+  })
+  .catch(err => {
+    console.error("Failed to submit report:", err);
+    showToast("⚠️ Submission Failed", "Could not reach backend server.");
+  });
+}
 
     // Emergency SMS Toast Simulation (Member 5 feature)
     function simulateCitizenSMS() {
@@ -1108,10 +1125,25 @@
     }
 
     function triggerMassAlert() {
-      showToast(
-        "🚨 MASS CELL-BROADCAST DISPATCHED",
-        "Bulk alerts transmitted across 42 BSNL/Airtel mountain towers covering North Sikkim & Dima Hasao."
-      );
+      fetch('https://dhararakshak-backend.onrender.com/api/trigger-sms-alert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          district: "North Sikkim & Dima Hasao",
+          message: "MDoNER ALERT: Severe landslide danger. Immediate evacuation advisory in effect."
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        showToast(
+          "🚨 MASS CELL-BROADCAST DISPATCHED",
+          `Bulk alerts transmitted across ${data.dispatched_towers} mountain GSM towers.`
+        );
+      })
+      .catch(err => {
+        console.error("Broadcast failed:", err);
+        showToast("⚠️ Broadcast Failed", "Could not reach backend server.");
+      });
     }
 
     function triggerSos() {
@@ -1156,7 +1188,7 @@ fetch('https://dhararakshak-backend.onrender.com')
 
 // Member 4: Sync live weather from Backend API
 function fetchLiveWeather(location = "Mangan (North Sikkim)") {
-  const url = `https://dhararakshak-backend.onrender.com`;
+  const url = `https://dhararakshak-backend.onrender.com/api/live-weather?location=${encodeURIComponent(location)}`;
 
   fetch(url)
     .then(res => {
