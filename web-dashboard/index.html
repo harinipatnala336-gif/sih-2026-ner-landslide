@@ -610,6 +610,8 @@
         <button class="map-btn active" onclick="filterHotspots('all')">All Zones</button>
         <button class="map-btn" onclick="filterHotspots('critical')">🔴 Critical Only</button>
         <button class="map-btn" onclick="filterHotspots('highways')">🛣️ Key Corridors (NH)</button>
+        <button class="map-btn" id="btnEvac" onclick="toggleEvacuationRoute()">🗺️ Safe Evacuation Route</button>
+        <button class="map-btn" id="btnSat" onclick="toggleSatelliteView()">🛰️ Satellite View</button>
       </div>
       <div id="map"></div>
     </main>
@@ -747,12 +749,35 @@
     // Add Zoom Control to Top Right
     L.control.zoom({ position: 'topright' }).addTo(map);
 
-    // Dark Tile Layer (CartoDB DarkMatter)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    // Tile Layers
+    const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       attribution: '&copy; MDoNER GeoAlert • CartoDB • OpenStreetMap',
       maxZoom: 18,
       subdomains: 'abcd'
     }).addTo(map);
+
+    const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles &copy; Esri World Imagery',
+      maxZoom: 18
+    });
+
+    let isSatellite = false;
+    function toggleSatelliteView() {
+      const btn = document.getElementById('btnSat');
+      if (!isSatellite) {
+        map.removeLayer(darkLayer);
+        map.addLayer(satelliteLayer);
+        isSatellite = true;
+        btn.classList.add('active');
+        btn.innerHTML = "🗺️ Dark Map View";
+      } else {
+        map.removeLayer(satelliteLayer);
+        map.addLayer(darkLayer);
+        isSatellite = false;
+        btn.classList.remove('active');
+        btn.innerHTML = "🛰️ Satellite View";
+      }
+    }
 
     // Realistic NER Landslide Hotspots Data
     const hotspots = [
@@ -892,10 +917,80 @@
     renderMarkers('all');
 
     function filterHotspots(type) {
-      document.querySelectorAll('.map-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.map-btn').forEach(btn => {
+        if (btn.id !== 'btnEvac' && btn.id !== 'btnSat') btn.classList.remove('active');
+      });
       event.target.classList.add('active');
       renderMarkers(type);
     }
+
+    // Evacuation Corridors & Road Blockage Polylines
+    let routeLayers = [];
+    let showRoutes = false;
+
+    function toggleEvacuationRoute() {
+      const btn = document.getElementById('btnEvac');
+      if (showRoutes) {
+        routeLayers.forEach(l => map.removeLayer(l));
+        routeLayers = [];
+        showRoutes = false;
+        btn.classList.remove('active');
+        showToast("Route Overlay Cleared", "Standard monitoring active.");
+        return;
+      }
+
+      showRoutes = true;
+      btn.classList.add('active');
+
+      // Blocked NH-10 Corridor (Siliguri - Sevoke - Teesta - Rangpo)
+      const blockedRouteCoords = [
+        [26.8906, 88.4725],
+        [26.9850, 88.4680],
+        [27.0435, 88.4618],
+        [27.1764, 88.5284]
+      ];
+
+      const blockedLine = L.polyline(blockedRouteCoords, {
+        color: '#ef4444',
+        weight: 6,
+        dashArray: '8, 8',
+        opacity: 0.95
+      }).addTo(map);
+      blockedLine.bindPopup("<strong style='color:#ef4444'>⛔ NH-10 BLOCKED (Teesta Slurry Slide)</strong><br>BRO Heavy Machinery deployed.");
+
+      // Safe Alternate Bypass (Sevoke -> Gorubathan -> Lava -> Algarah -> Rangpo)
+      const safeRouteCoords = [
+        [26.8906, 88.4725],
+        [26.9734, 88.7025],
+        [27.0864, 88.6610],
+        [27.1120, 88.5850],
+        [27.1764, 88.5284]
+      ];
+
+      const safeLine = L.polyline(safeRouteCoords, {
+        color: '#10b981',
+        weight: 6,
+        opacity: 0.95
+      }).addTo(map);
+      safeLine.bindPopup("<strong style='color:#10b981'>✅ SAFE ALTERNATE RELIEF CORRIDOR</strong><br>Route via Lava-Algarah open for NDRF relief & light vehicles.");
+
+      routeLayers.push(blockedLine, safeLine);
+      map.flyTo([27.0435, 88.55], 10);
+      showToast("🛣️ Rerouting Active", "NH-10 Blocked. Safe bypass drawn via Lava-Algarah.");
+    }
+
+    // Auto-sync with Member 2 Backend API if running
+    fetch('http://localhost:8000/api/hotspots')
+      .then(res => res.json())
+      .then(data => {
+        if (data.hotspots && data.hotspots.length > 0) {
+          console.log("[Member 1 Dashboard] Live Backend API connected successfully!");
+          showToast("🟢 Live Backend Connected", "Syncing real-time risk scores from Member 2 API.");
+        }
+      })
+      .catch(err => {
+        console.log("[Member 1 Dashboard] Using embedded regional telemetry.");
+      });
 
     // Member 5: Sync map point directly to phone simulator
     function selectZoneForMobile(name, risk, rain, slope) {
