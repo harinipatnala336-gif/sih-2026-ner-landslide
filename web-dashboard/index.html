@@ -838,113 +838,69 @@
     }
 
     // Realistic NER Landslide Hotspots Data
-    const hotspots = [
-      {
-        name: "Mangan / Chungthang, North Sikkim",
-        lat: 27.5085,
-        lng: 88.5326,
-        risk: "Critical (92%)",
-        color: "#ef4444",
-        type: "critical",
-        rain: "192 mm",
-        slope: "48°",
-        insar: "+6.4 mm/wk subsidence",
-        advisory: "Immediate evacuation of valley settlements ordered."
-      },
-      {
-        name: "NH-10 Teesta Valley Corridor, Sikkim-Bengal Border",
-        lat: 27.0435,
-        lng: 88.4618,
-        risk: "Critical (89%)",
-        color: "#ef4444",
-        type: "highways",
-        rain: "168 mm",
-        slope: "44°",
-        insar: "+4.1 mm/wk creep",
-        advisory: "Highway blocked by slurry. Divert via Lava-Algarah."
-      },
-      {
-        name: "Haflong Hill Station, Dima Hasao (Assam)",
-        lat: 25.1764,
-        lng: 93.0232,
-        risk: "High Warning (78%)",
-        color: "#f59e0b",
-        type: "critical",
-        rain: "142 mm",
-        slope: "38°",
-        insar: "+2.8 mm/wk creep",
-        advisory: "Railway hill section alert. Speed restricted to 15km/h."
-      },
-      {
-        name: "NH-29 Kohima-Dimapur Hill Stretch (Nagaland)",
-        lat: 25.6751,
-        lng: 94.1086,
-        risk: "High Warning (74%)",
-        color: "#f59e0b",
-        type: "highways",
-        rain: "135 mm",
-        slope: "41°",
-        insar: "+3.2 mm/wk creep",
-        advisory: "Pagla Pahar mudslide active. Heavy vehicles prohibited."
-      },
-      {
-        name: "Sohra (Cherrapunji), Meghalaya",
-        lat: 25.2986,
-        lng: 91.7322,
-        risk: "Moderate (55%)",
-        color: "#eab308",
-        type: "all",
-        rain: "310 mm",
-        slope: "28°",
-        insar: "+0.9 mm/wk (Hard Sandstone)",
-        advisory: "Extremely heavy monsoon rain; bedrock stable but gorge watch on."
-      },
-      {
-        name: "Guwahati Brahmaputra Plain (Assam)",
-        lat: 26.1445,
-        lng: 91.7362,
-        risk: "Safe (14%)",
-        color: "#10b981",
-        type: "all",
-        rain: "45 mm",
-        slope: "6°",
-        insar: "0.0 mm/wk",
-        advisory: "Normal conditions. Relief supply staging depot."
-      },
-      {
-        name: "Tawang High Altitude Corridor (Arunachal Pradesh)",
-        lat: 27.5861,
-        lng: 91.8594,
-        risk: "High Warning (71%)",
-        color: "#f59e0b",
-        type: "highways",
-        rain: "85 mm (Mixed Snow/Slush)",
-        slope: "49°",
-        insar: "+3.5 mm/wk",
-        advisory: "Sela Pass road slip watch. Military convoys on alert."
-      }
-    ];
+    let hotspots = []; // will be populated from the live API
+let markers = [];
 
-    let markers = [];
+function getColorForLevel(level) {
+  if (level === "CRITICAL") return "#ef4444";
+  if (level === "WARNING") return "#f59e0b";
+  return "#10b981";
+}
 
-    // Render Markers on Leaflet Map
-    function renderMarkers(filterType = 'all') {
-      markers.forEach(m => map.removeLayer(m));
-      markers = [];
+function renderMarkers(filterType = 'all') {
+  markers.forEach(m => map.removeLayer(m));
+  markers = [];
 
-      hotspots.forEach(spot => {
-        if (filterType === 'critical' && spot.color !== '#ef4444') return;
-        if (filterType === 'highways' && spot.type !== 'highways') return;
+  hotspots.forEach(spot => {
+    const color = getColorForLevel(spot.threat_level);
+    if (filterType === 'critical' && spot.threat_level !== 'CRITICAL') return;
 
-        // Custom pulsing marker circle
-        const circle = L.circleMarker([spot.lat, spot.lng], {
-          radius: spot.color === '#ef4444' ? 14 : 10,
-          fillColor: spot.color,
-          color: '#fff',
-          weight: 2,
-          opacity: 1,
-          fillOpacity: 0.85
-        }).addTo(map);
+    const circle = L.circleMarker([spot.latitude, spot.longitude], {
+      radius: spot.threat_level === 'CRITICAL' ? 14 : 10,
+      fillColor: color,
+      color: '#fff',
+      weight: 2,
+      opacity: 1,
+      fillOpacity: 0.85
+    }).addTo(map);
+
+    circle.bindPopup(`
+      <div class="popup-box">
+        <div class="popup-title" style="color: ${color}">
+          <span>●</span> ${spot.name}
+        </div>
+        <div style="font-size: 11px; margin-top: 4px;">
+          <strong>Risk Score:</strong> ${spot.risk_score}%<br>
+          <strong>Threat Level:</strong> ${spot.threat_level}<br>
+          <strong>24h Rainfall:</strong> ${spot.rainfall_24h_mm ?? 'N/A'} mm<br>
+          <strong>Slope:</strong> ${spot.slope_deg ?? 'N/A'}°
+        </div>
+        <div style="font-size: 10px; background: rgba(255,255,255,0.08); padding: 4px 6px; border-radius: 4px; margin-top: 4px; color: #fca5a5;">
+          ⚠️ ${spot.advisory ?? ''}
+        </div>
+      </div>
+    `);
+
+    markers.push(circle);
+  });
+}
+
+// Fetch live hotspots from backend and render them
+function loadHotspotsAndRender() {
+  fetch('https://bhoorakshak.onrender.com/api/hotspots')
+    .then(res => res.json())
+    .then(data => {
+      hotspots = data.hotspots;
+      renderMarkers('all');
+      console.log("[Member 1 Dashboard] Live Backend API connected successfully!");
+      showToast("🟢 Live Backend Connected", "Syncing real-time risk scores from Member 2 API.");
+    })
+    .catch(err => {
+      console.log("[Member 1 Dashboard] Failed to load live hotspots:", err);
+    });
+}
+
+loadHotspotsAndRender();
 
         // Bind Custom HTML Popup
         circle.bindPopup(`
