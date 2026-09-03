@@ -4,7 +4,10 @@ Backend API Server (FastAPI)
 Owned by: Member 2 (with Member 3 & Member 4 integrations)
 """
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
+from sqlalchemy.orm import Session
+from database import engine, get_db, Base
+import models
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
@@ -37,6 +40,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # --- IN-MEMORY DATABASE FOR DEMO ---
 HOTSPOTS_DB = [
@@ -89,7 +93,24 @@ HOTSPOTS_DB = [
         "advisory": "Pagla Pahar mudslide active. Heavy vehicles prohibited."
     }
 ]
+# --- CREATE DB TABLES ---
+Base.metadata.create_all(bind=engine)
 
+# --- SEED HOTSPOTS INTO DB (only runs if table is empty) ---
+def seed_hotspots():
+    db = next(get_db())
+    if db.query(models.Hotspot).count() == 0:
+        for h in HOTSPOTS_DB:
+            db.add(models.Hotspot(
+                id=h["id"], name=h["name"], latitude=h["latitude"], longitude=h["longitude"],
+                risk_score=h["risk_score"], threat_level=h["threat_level"],
+                rainfall_24h_mm=h.get("rainfall_24h_mm"), slope_deg=h.get("slope_deg"),
+                insar_subsidence=h.get("insar_subsidence"), advisory=h.get("advisory")
+            ))
+        db.commit()
+    db.close()
+
+seed_hotspots()
 CITIZEN_REPORTS = []
 
 # --- PYDANTIC SCHEMAS ---
@@ -98,6 +119,7 @@ class PredictionRequest(BaseModel):
     slope_deg: float
     soil_moisture_pct: float
     elevation_m: float
+    hotspot_id: Optional[int] = None
 
 class CitizenReportRequest(BaseModel):
     latitude: float
@@ -122,25 +144,34 @@ def root():
 
 # Endpoint for Member 1 (Web Dashboard)
 @app.get("/api/hotspots")
-def get_all_hotspots():
-    """Returns all current regional landslide risk hotspots."""
-    return {"hotspots": HOTSPOTS_DB}
+def get_all_hotspots(db: Session = Depends(get_db)):
+    """Returns all current regional landslide risk hotspots from the database."""
+    hotspots = db.query(models.Hotspot).all()
+    return {"hotspots": [
+        {
+            "id": h.id, "name": h.name, "latitude": h.latitude, "longitude": h.longitude,
+            "risk_score": h.risk_score, "threat_level": h.threat_level,
+            "rainfall_24h_mm": h.rainfall_24h_mm, "slope_deg": h.slope_deg,
+            "insar_subsidence": h.insar_subsidence, "advisory": h.advisory
+        } for h in hotspots
+    ]}
 
 # Endpoint for Member 3 (AI ML Prediction)
 @app.post("/api/predict-risk")
-def predict_landslide_risk(data: PredictionRequest):
+def predict_landslide_risk(data: PredictionRequest, db: Session = Depends(get_db)):
     """
-    Computes landslide probability using Member 3's real Random Forest AI model.
+    Computes landslide probability using Member 3's real Random Forest AI model,
+    logs the assessment, and optionally updates a linked hotspot.
     """
     if ai_model is not None:
         features = [[data.rainfall_mm, data.slope_deg, data.soil_moisture_pct, data.elevation_m]]
         prediction = ai_model.predict(features)[0]
         probabilities = ai_model.predict_proba(features)[0]
         risk_pct = round(float(probabilities[1]) * 100, 1) if len(probabilities) > 1 else (100.0 if prediction == 1 else 0.0)
-
         level = "CRITICAL" if risk_pct >= 75 else "WARNING" if risk_pct >= 45 else "SAFE"
-        return {
-            "model_engine": "Random Forest AI (Trained by Member 3)",
+        engine_name = "Random Forest AI (Trained by Member 3)"
+        result = {
+            "model_engine": engine_name,
             "landslide_predicted": bool(prediction == 1),
             "risk_score_pct": risk_pct,
             "threat_level": level,
@@ -150,29 +181,52 @@ def predict_landslide_risk(data: PredictionRequest):
         score = (data.rainfall_mm * 0.35) + (data.slope_deg * 0.40) + (data.soil_moisture_pct * 0.25)
         normalized_risk = min(100.0, max(0.0, score * 0.9))
         level = "CRITICAL" if normalized_risk >= 80 else "WARNING" if normalized_risk >= 60 else "SAFE"
-        return {
-            "model_engine": "Heuristic Rule Fallback",
+        engine_name = "Heuristic Rule Fallback"
+        risk_pct = round(normalized_risk, 1)
+        result = {
+            "model_engine": engine_name,
             "landslide_predicted": normalized_risk >= 60,
-            "risk_score_pct": round(normalized_risk, 1),
+            "risk_score_pct": risk_pct,
             "threat_level": level
         }
 
+    log_entry = models.RiskAssessment(
+        hotspot_id=data.hotspot_id,
+        rainfall_mm=data.rainfall_mm, slope_deg=data.slope_deg,
+        soil_moisture_pct=data.soil_moisture_pct, elevation_m=data.elevation_m,
+        risk_score_pct=risk_pct, threat_level=level, model_engine=engine_name
+    )
+    db.add(log_entry)
+
+    if data.hotspot_id is not None:
+        hotspot = db.query(models.Hotspot).filter(models.Hotspot.id == data.hotspot_id).first()
+        if hotspot:
+            hotspot.risk_score = risk_pct
+            hotspot.threat_level = level
+
+    db.commit()
+    return result
 # Endpoint for Member 5 (Mobile App Reporting)
 @app.post("/api/report-incident")
-def report_incident(report: CitizenReportRequest):
+def report_incident(report: CitizenReportRequest, db: Session = Depends(get_db)):
     """Receives crowdsourced road crack / landslide reports from citizens."""
-    incident = {
-        "id": len(CITIZEN_REPORTS) + 1,
-        "timestamp": datetime.datetime.utcnow().isoformat(),
-        "latitude": report.latitude,
-        "longitude": report.longitude,
-        "hazard_type": report.hazard_type,
-        "description": report.description,
-        "verified": True
+    incident = models.CitizenReport(
+        latitude=report.latitude, longitude=report.longitude,
+        hazard_type=report.hazard_type, description=report.description,
+        photo_url=report.photo_url
+    )
+    db.add(incident)
+    db.commit()
+    db.refresh(incident)
+    return {
+        "status": "success",
+        "message": "Incident logged and forwarded to District Ops",
+        "incident": {
+            "id": incident.id, "timestamp": incident.timestamp.isoformat(),
+            "latitude": incident.latitude, "longitude": incident.longitude,
+            "hazard_type": incident.hazard_type, "description": incident.description
+        }
     }
-    CITIZEN_REPORTS.append(incident)
-    return {"status": "success", "message": "Incident logged and forwarded to District Ops", "incident": incident}
-
 # Endpoint for Member 5 & Emergency Sirens
 @app.post("/api/trigger-sms-alert")
 def trigger_sms_alert(alert: AlertBroadcastRequest):
@@ -203,6 +257,33 @@ def get_live_weather(location: str = "Mangan (North Sikkim)"):
     from weather_service import fetch_live_weather
     return fetch_live_weather(location)
 
+@app.get("/api/risk-history")
+def get_risk_history(hotspot_id: Optional[int] = None, db: Session = Depends(get_db)):
+    """Returns historical risk assessments, optionally filtered by hotspot."""
+    query = db.query(models.RiskAssessment)
+    if hotspot_id is not None:
+        query = query.filter(models.RiskAssessment.hotspot_id == hotspot_id)
+    records = query.order_by(models.RiskAssessment.timestamp.desc()).limit(50).all()
+    return {"history": [
+        {
+            "id": r.id, "hotspot_id": r.hotspot_id, "risk_score_pct": r.risk_score_pct,
+            "threat_level": r.threat_level, "model_engine": r.model_engine,
+            "timestamp": r.timestamp.isoformat()
+        } for r in records
+    ]}
+
+@app.get("/api/citizen-reports")
+def get_citizen_reports(db: Session = Depends(get_db)):
+    """Returns all citizen-submitted hazard reports."""
+    reports = db.query(models.CitizenReport).order_by(models.CitizenReport.timestamp.desc()).all()
+    return {"reports": [
+        {
+            "id": r.id, "latitude": r.latitude, "longitude": r.longitude,
+            "hazard_type": r.hazard_type, "description": r.description,
+            "timestamp": r.timestamp.isoformat()
+        } for r in reports
+    ]}
+    
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
