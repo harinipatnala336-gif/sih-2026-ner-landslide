@@ -1040,7 +1040,7 @@
     }
 
     // Auto-sync with Member 2 Backend API if running
-      fetch('https://dhararakshak-backend.onrender.com/api/hotspots')
+      fetch('https://bhoorakshak.onrender.com/api/hotspots')
       .then(res => res.json())
       .then(data => {
         if (data.hotspots && data.hotspots.length > 0) {
@@ -1083,7 +1083,7 @@
    function submitReportSuccess() {
   closeReportModal();
 
-  fetch('https://dhararakshak-backend.onrender.com/api/report-incident', {
+  fetch('https://bhoorakshak.onrender.com/api/report-incident', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -1125,7 +1125,7 @@
     }
 
     function triggerMassAlert() {
-      fetch('https://dhararakshak-backend.onrender.com/api/trigger-sms-alert', {
+      fetch('https://bhoorakshak.onrender.com/api/trigger-sms-alert', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1173,7 +1173,7 @@
   </script>
 </body>
 </html>
-fetch('https://dhararakshak-backend.onrender.com')
+fetch('https://bhoorakshak.onrender.com')
   .then(res => res.json())
   .then(data => {
     if (data.hotspots && data.hotspots.length > 0) {
@@ -1188,7 +1188,7 @@ fetch('https://dhararakshak-backend.onrender.com')
 
 // Member 4: Sync live weather from Backend API
 function fetchLiveWeather(location = "Mangan (North Sikkim)") {
-  const url = `https://dhararakshak-backend.onrender.com/api/live-weather?location=${encodeURIComponent(location)}`;
+  const url = `https://bhoorakshak.onrender.com/api/live-weather?location=${encodeURIComponent(location)}`;
 
   fetch(url)
     .then(res => {
