@@ -4,14 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MDoNER GeoAlert-NER | AI Landslide Early Warning & Risk Monitoring System</title>
-  
-  <!-- Leaflet CSS for Maps -->
+
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <!-- Google Fonts: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-  <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <style>
@@ -29,12 +26,7 @@
       --accent-cyan: #06b6d4;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
 
     body {
       background-color: var(--bg-dark);
@@ -45,7 +37,6 @@
       flex-direction: column;
     }
 
-    /* Top Navbar */
     header {
       background: rgba(17, 24, 39, 0.95);
       backdrop-filter: blur(10px);
@@ -57,11 +48,7 @@
       z-index: 1000;
     }
 
-    .brand-group {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
+    .brand-group { display: flex; align-items: center; gap: 14px; }
 
     .badge-gov {
       background: linear-gradient(135deg, #f97316, #10b981);
@@ -74,24 +61,10 @@
       text-transform: uppercase;
     }
 
-    .brand-title {
-      font-size: 17px;
-      font-weight: 700;
-      letter-spacing: -0.3px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+    .brand-title { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; display: flex; align-items: center; gap: 8px; }
+    .brand-title span { color: var(--accent-cyan); }
 
-    .brand-title span {
-      color: var(--accent-cyan);
-    }
-
-    .header-pills {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+    .header-pills { display: flex; align-items: center; gap: 12px; }
 
     .pill {
       background: rgba(31, 41, 55, 0.8);
@@ -104,16 +77,10 @@
       gap: 7px;
     }
 
-    .pill.danger {
-      border-color: rgba(239, 68, 68, 0.4);
-      background: rgba(239, 68, 68, 0.1);
-      color: #fca5a5;
-    }
+    .pill.danger { border-color: rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.1); color: #fca5a5; }
 
     .pulse-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
+      width: 8px; height: 8px; border-radius: 50%;
       background: var(--accent-red);
       box-shadow: 0 0 10px var(--accent-red);
       animation: pulse 1.5s infinite;
@@ -125,7 +92,6 @@
       100% { opacity: 1; transform: scale(1); }
     }
 
-    /* Main Workspace Layout */
     .dashboard-container {
       display: grid;
       grid-template-columns: 340px 1fr 380px;
@@ -134,201 +100,87 @@
       overflow: hidden;
     }
 
-    /* Left Sidebar: Telemetry & Regional Stats */
     .left-sidebar {
       background: var(--panel-bg);
       border-right: 1px solid var(--panel-border);
-      display: flex;
-      flex-direction: column;
+      display: flex; flex-direction: column;
       overflow-y: auto;
-      padding: 16px;
-      gap: 16px;
+      padding: 16px; gap: 16px;
     }
 
     .section-header {
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      letter-spacing: 0.8px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      font-size: 12px; font-weight: 700; text-transform: uppercase;
+      color: var(--text-muted); letter-spacing: 0.8px;
+      display: flex; align-items: center; gap: 6px;
     }
 
     .stat-card {
       background: rgba(31, 41, 55, 0.5);
       border: 1px solid var(--panel-border);
-      border-radius: 8px;
-      padding: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
+      border-radius: 8px; padding: 14px;
+      display: flex; flex-direction: column; gap: 4px;
     }
 
-    .stat-title {
-      font-size: 11px;
-      color: var(--text-muted);
-      text-transform: uppercase;
-    }
-
-    .stat-value {
-      font-size: 24px;
-      font-weight: 800;
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .stat-sub {
-      font-size: 11px;
-      color: #9ca3af;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
+    .stat-title { font-size: 11px; color: var(--text-muted); text-transform: uppercase; }
+    .stat-value { font-size: 24px; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+    .stat-sub { font-size: 11px; color: #9ca3af; display: flex; align-items: center; gap: 4px; }
 
     .risk-breakdown-box {
       background: rgba(15, 23, 42, 0.7);
       border: 1px solid var(--panel-border);
-      border-radius: 8px;
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+      border-radius: 8px; padding: 12px;
+      display: flex; flex-direction: column; gap: 10px;
     }
 
-    .risk-item {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
+    .risk-item { display: flex; flex-direction: column; gap: 4px; }
+    .risk-labels { display: flex; justify-content: space-between; font-size: 12px; }
+    .progress-bar-bg { height: 6px; background: #374151; border-radius: 3px; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 3px; }
 
-    .risk-labels {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-    }
-
-    .progress-bar-bg {
-      height: 6px;
-      background: #374151;
-      border-radius: 3px;
-      overflow: hidden;
-    }
-
-    .progress-fill {
-      height: 100%;
-      border-radius: 3px;
-    }
-
-    /* Center: The Map */
-    .map-wrapper {
-      position: relative;
-      height: 100%;
-      width: 100%;
-    }
-
-    #map {
-      height: 100%;
-      width: 100%;
-      background: #0d1117;
-    }
+    .map-wrapper { position: relative; height: 100%; width: 100%; }
+    #map { height: 100%; width: 100%; background: #0d1117; }
 
     .map-overlay-controls {
-      position: absolute;
-      top: 16px;
-      left: 60px;
-      z-index: 500;
-      display: flex;
-      gap: 8px;
+      position: absolute; top: 16px; left: 60px; z-index: 500;
+      display: flex; gap: 8px;
     }
 
     .map-btn {
       background: rgba(17, 24, 39, 0.9);
       border: 1px solid var(--panel-border);
       color: var(--text-main);
-      padding: 7px 14px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 600;
+      padding: 7px 14px; border-radius: 6px;
+      font-size: 12px; font-weight: 600;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      display: flex; align-items: center; gap: 6px;
       backdrop-filter: blur(8px);
       transition: all 0.2s;
     }
 
-    .map-btn:hover, .map-btn.active {
-      background: var(--accent-blue);
-      border-color: var(--accent-blue);
-    }
+    .map-btn:hover, .map-btn.active { background: var(--accent-blue); border-color: var(--accent-blue); }
 
-    /* Right Sidebar: Member 5's Mobile & Alert Center */
     .right-sidebar {
       background: var(--panel-bg);
       border-left: 1px solid var(--panel-border);
-      display: flex;
-      flex-direction: column;
+      display: flex; flex-direction: column;
       overflow-y: auto;
-      padding: 16px;
-      gap: 16px;
+      padding: 16px; gap: 16px;
     }
 
-    .tab-switcher {
-      display: flex;
-      background: #1f2937;
-      padding: 3px;
-      border-radius: 8px;
-    }
-
-    .tab-btn {
-      flex: 1;
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      padding: 8px;
-      font-size: 12px;
-      font-weight: 600;
-      border-radius: 6px;
-      cursor: pointer;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.2s;
-    }
-
-    .tab-btn.active {
-      background: #374151;
-      color: #fff;
-    }
-
-    /* Phone Simulator for Member 5 */
     .mobile-simulator {
       background: #030712;
       border: 3px solid #374151;
       border-radius: 24px;
       padding: 14px 12px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+      display: flex; flex-direction: column; gap: 12px;
     }
 
-    .phone-notch {
-      width: 70px;
-      height: 4px;
-      background: #374151;
-      border-radius: 3px;
-      margin: 0 auto;
-    }
+    .phone-notch { width: 70px; height: 4px; background: #374151; border-radius: 3px; margin: 0 auto; }
 
     .mobile-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 11px;
-      color: var(--text-muted);
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 11px; color: var(--text-muted);
       border-bottom: 1px solid #1f2937;
       padding-bottom: 8px;
     }
@@ -336,84 +188,41 @@
     .offline-tag {
       background: rgba(16, 185, 129, 0.15);
       color: var(--accent-green);
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 9px;
-      font-weight: 700;
+      padding: 2px 6px; border-radius: 4px;
+      font-size: 9px; font-weight: 700;
     }
 
     .mobile-hazard-card {
       background: linear-gradient(145deg, rgba(239, 68, 68, 0.2), rgba(17, 24, 39, 0.8));
       border: 1px solid rgba(239, 68, 68, 0.4);
-      border-radius: 12px;
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
+      border-radius: 12px; padding: 12px;
+      display: flex; flex-direction: column; gap: 6px;
     }
 
     .mobile-btn {
-      width: 100%;
-      padding: 10px;
-      border-radius: 8px;
-      border: none;
-      font-weight: 600;
-      font-size: 12px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
+      width: 100%; padding: 10px; border-radius: 8px; border: none;
+      font-weight: 600; font-size: 12px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
       transition: transform 0.1s, opacity 0.2s;
     }
 
-    .mobile-btn:active {
-      transform: scale(0.98);
-    }
+    .mobile-btn:active { transform: scale(0.98); }
+    .mobile-btn.report { background: #3b82f6; color: white; }
+    .mobile-btn.sos { background: #ef4444; color: white; }
+    .mobile-btn.sms-test { background: #10b981; color: white; }
 
-    .mobile-btn.report {
-      background: #3b82f6;
-      color: white;
-    }
-
-    .mobile-btn.sos {
-      background: #ef4444;
-      color: white;
-    }
-
-    .mobile-btn.sms-test {
-      background: #10b981;
-      color: white;
-    }
-
-    /* Live incident log */
-    .incident-feed {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      max-height: 220px;
-      overflow-y: auto;
-    }
+    .incident-feed { display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto; }
 
     .incident-card {
       background: rgba(31, 41, 55, 0.4);
       border-left: 3px solid var(--accent-red);
-      padding: 8px 10px;
-      border-radius: 4px;
+      padding: 8px 10px; border-radius: 4px;
       font-size: 11px;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
+      display: flex; flex-direction: column; gap: 2px;
     }
 
-    .incident-meta {
-      display: flex;
-      justify-content: space-between;
-      color: var(--text-muted);
-      font-size: 10px;
-    }
+    .incident-meta { display: flex; justify-content: space-between; color: var(--text-muted); font-size: 10px; }
 
-    /* Custom Leaflet Popup Styling */
     .leaflet-popup-content-wrapper {
       background: #111827 !important;
       color: #f3f4f6 !important;
@@ -421,68 +230,37 @@
       border-radius: 8px !important;
       box-shadow: 0 10px 20px rgba(0,0,0,0.5) !important;
     }
-    .leaflet-popup-tip {
-      background: #111827 !important;
-    }
-    .popup-box {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      padding: 4px;
-      font-family: 'Inter', sans-serif;
-    }
-    .popup-title {
-      font-weight: 700;
-      font-size: 13px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
+    .leaflet-popup-tip { background: #111827 !important; }
+    .popup-box { display: flex; flex-direction: column; gap: 6px; padding: 4px; font-family: 'Inter', sans-serif; }
+    .popup-title { font-weight: 700; font-size: 13px; display: flex; align-items: center; gap: 6px; }
 
-    /* Modal for Incident Report Simulation */
     .modal-backdrop {
-      position: fixed;
-      top: 0; left: 0; width: 100vw; height: 100vh;
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
       background: rgba(0,0,0,0.7);
       backdrop-filter: blur(4px);
-      display: none;
-      justify-content: center;
-      align-items: center;
+      display: none; justify-content: center; align-items: center;
       z-index: 2000;
     }
     .modal-card {
       background: var(--panel-bg);
       border: 1px solid var(--panel-border);
-      width: 420px;
-      border-radius: 12px;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
+      width: 420px; border-radius: 12px; padding: 20px;
+      display: flex; flex-direction: column; gap: 14px;
     }
 
-    /* Toast Notification for SMS Alert */
     .toast-container {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      z-index: 3000;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+      position: fixed; bottom: 24px; right: 24px; z-index: 3000;
+      display: flex; flex-direction: column; gap: 10px;
     }
 
     .sms-toast {
       background: #1e293b;
       border: 1px solid #3b82f6;
       border-left: 5px solid #3b82f6;
-      padding: 12px 16px;
-      border-radius: 8px;
+      padding: 12px 16px; border-radius: 8px;
       box-shadow: 0 12px 30px rgba(0,0,0,0.6);
       width: 320px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
+      display: flex; flex-direction: column; gap: 4px;
       animation: slideIn 0.3s ease-out;
     }
 
@@ -491,70 +269,24 @@
       to { transform: translateX(0); opacity: 1; }
     }
 
-    /* Mobile & Tablet Responsive Layout */
     @media (max-width: 1024px) {
-      body {
-        height: auto;
-        overflow-y: auto;
-      }
-      header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-        padding: 12px 16px;
-      }
-      .brand-group {
-        flex-wrap: wrap;
-        gap: 8px;
-      }
-      .brand-group span:last-child {
-        display: none;
-      }
-      .header-pills {
-        flex-wrap: wrap;
-        width: 100%;
-        gap: 8px;
-      }
-      .pill {
-        font-size: 10px;
-        padding: 4px 8px;
-      }
-      .dashboard-container {
-        display: flex;
-        flex-direction: column;
-        height: auto;
-        overflow: visible;
-      }
-      .map-wrapper {
-        height: 50vh;
-        min-height: 380px;
-        order: 1;
-      }
-      .map-overlay-controls {
-        left: 10px;
-        top: 10px;
-        flex-wrap: wrap;
-        gap: 5px;
-      }
-      .map-btn {
-        padding: 5px 9px;
-        font-size: 10px;
-      }
-      .left-sidebar {
-        order: 2;
-        border-right: none;
-        border-bottom: 1px solid var(--panel-border);
-      }
-      .right-sidebar {
-        order: 3;
-        border-left: none;
-      }
+      body { height: auto; overflow-y: auto; }
+      header { flex-direction: column; align-items: flex-start; gap: 10px; padding: 12px 16px; }
+      .brand-group { flex-wrap: wrap; gap: 8px; }
+      .brand-group span:last-child { display: none; }
+      .header-pills { flex-wrap: wrap; width: 100%; gap: 8px; }
+      .pill { font-size: 10px; padding: 4px 8px; }
+      .dashboard-container { display: flex; flex-direction: column; height: auto; overflow: visible; }
+      .map-wrapper { height: 50vh; min-height: 380px; order: 1; }
+      .map-overlay-controls { left: 10px; top: 10px; flex-wrap: wrap; gap: 5px; }
+      .map-btn { padding: 5px 9px; font-size: 10px; }
+      .left-sidebar { order: 2; border-right: none; border-bottom: 1px solid var(--panel-border); }
+      .right-sidebar { order: 3; border-left: none; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Top Navigation -->
   <header>
     <div class="brand-group">
       <span class="badge-gov">MDoNER • SIH 26001</span>
@@ -583,14 +315,10 @@
     </div>
   </header>
 
-  <!-- Main Grid Dashboard -->
   <div class="dashboard-container">
 
-    <!-- Left Column: Command Telemetry -->
     <aside class="left-sidebar">
-      <div class="section-header">
-        <i data-lucide="activity" style="width: 14px;"></i> Regional Risk Metrics (NER)
-      </div>
+      <div class="section-header"><i data-lucide="activity" style="width: 14px;"></i> Regional Risk Metrics (NER)</div>
 
       <div class="stat-card" style="border-left: 4px solid var(--accent-red);">
         <div class="stat-title">Imminent Hazard Zones</div>
@@ -610,61 +338,33 @@
         <div class="stat-sub">📲 Cell-broadcast across 42 mountain GSM towers</div>
       </div>
 
-      <div class="section-header" style="margin-top: 6px;">
-        <i data-lucide="cpu" style="width: 14px;"></i> Multi-Modal AI Threat Index
-      </div>
+      <div class="section-header" style="margin-top: 6px;"><i data-lucide="cpu" style="width: 14px;"></i> Multi-Modal AI Threat Index</div>
 
       <div class="risk-breakdown-box">
         <div class="risk-item">
-          <div class="risk-labels">
-            <span>Antecedent Rainfall Index (72h)</span>
-            <span style="color: #f87171; font-weight: 700;">185 mm (Extreme)</span>
-          </div>
-          <div class="progress-bar-bg">
-            <div class="progress-fill" style="width: 90%; background: #ef4444;"></div>
-          </div>
+          <div class="risk-labels"><span>Antecedent Rainfall Index (72h)</span><span style="color: #f87171; font-weight: 700;">185 mm (Extreme)</span></div>
+          <div class="progress-bar-bg"><div class="progress-fill" style="width: 90%; background: #ef4444;"></div></div>
         </div>
-
         <div class="risk-item">
-          <div class="risk-labels">
-            <span>Himalayan Slope Instability</span>
-            <span style="color: #fbbf24; font-weight: 700;">46° (Critical)</span>
-          </div>
-          <div class="progress-bar-bg">
-            <div class="progress-fill" style="width: 82%; background: #f59e0b;"></div>
-          </div>
+          <div class="risk-labels"><span>Himalayan Slope Instability</span><span style="color: #fbbf24; font-weight: 700;">46° (Critical)</span></div>
+          <div class="progress-bar-bg"><div class="progress-fill" style="width: 82%; background: #f59e0b;"></div></div>
         </div>
-
         <div class="risk-item">
-          <div class="risk-labels">
-            <span>Soil Moisture Saturation</span>
-            <span style="color: #f87171; font-weight: 700;">94%</span>
-          </div>
-          <div class="progress-bar-bg">
-            <div class="progress-fill" style="width: 94%; background: #ef4444;"></div>
-          </div>
+          <div class="risk-labels"><span>Soil Moisture Saturation</span><span style="color: #f87171; font-weight: 700;">94%</span></div>
+          <div class="progress-bar-bg"><div class="progress-fill" style="width: 94%; background: #ef4444;"></div></div>
         </div>
-
         <div class="risk-item">
-          <div class="risk-labels">
-            <span>InSAR Ground Subsidence</span>
-            <span style="color: #f87171; font-weight: 700;">+5.1 mm/week</span>
-          </div>
-          <div class="progress-bar-bg">
-            <div class="progress-fill" style="width: 78%; background: #ef4444;"></div>
-          </div>
+          <div class="risk-labels"><span>InSAR Ground Subsidence</span><span style="color: #f87171; font-weight: 700;">+5.1 mm/week</span></div>
+          <div class="progress-bar-bg"><div class="progress-fill" style="width: 78%; background: #ef4444;"></div></div>
         </div>
       </div>
 
-      <div class="section-header" style="margin-top: 6px;">
-        <i data-lucide="radio" style="width: 14px;"></i> Emergency Authority Actions
-      </div>
+      <div class="section-header" style="margin-top: 6px;"><i data-lucide="radio" style="width: 14px;"></i> Emergency Authority Actions</div>
       <button class="map-btn" style="width: 100%; justify-content: center; background: #dc2626;" onclick="triggerMassAlert()">
         <i data-lucide="bell-ring" style="width: 16px;"></i> Broadcast Red Alert (SMS)
       </button>
     </aside>
 
-    <!-- Center: Interactive GIS Map -->
     <main class="map-wrapper">
       <div class="map-overlay-controls">
         <button class="map-btn active" onclick="filterHotspots('all')">All Zones</button>
@@ -676,13 +376,9 @@
       <div id="map"></div>
     </main>
 
-    <!-- Right Column: Member 5 Spotlight (Mobile App & Alert Subsystem) -->
     <aside class="right-sidebar">
-      <div class="section-header">
-        <i data-lucide="smartphone" style="width: 14px;"></i> Member 5: Mobile App Simulator
-      </div>
+      <div class="section-header"><i data-lucide="smartphone" style="width: 14px;"></i> Member 5: Mobile App Simulator</div>
 
-      <!-- Mobile App Frame -->
       <div class="mobile-simulator">
         <div class="phone-notch"></div>
         <div class="mobile-header">
@@ -690,7 +386,6 @@
           <span class="offline-tag">Offline-Ready (2G)</span>
         </div>
 
-        <!-- Dynamic User Status -->
         <div class="mobile-hazard-card" id="mobileAlertCard">
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <span style="font-size: 11px; font-weight: 700; color: #fca5a5;">IMMINENT HAZARD</span>
@@ -705,48 +400,32 @@
           </div>
         </div>
 
-        <!-- Action Buttons for Citizen -->
         <button class="mobile-btn report" onclick="openReportModal()">
           <i data-lucide="camera" style="width: 14px;"></i> Report Slope Crack / Slide
         </button>
-
         <button class="mobile-btn sms-test" onclick="simulateCitizenSMS()">
           <i data-lucide="message-square" style="width: 14px;"></i> Test 2G Emergency SMS
         </button>
-
         <button class="mobile-btn sos" onclick="triggerSos()">
           <i data-lucide="phone-call" style="width: 14px;"></i> Emergency SOS (NDRF 1078)
         </button>
       </div>
 
-      <div class="section-header" style="margin-top: 8px;">
-        <i data-lucide="rss" style="width: 14px;"></i> Real-Time Citizen Reports
-      </div>
+      <div class="section-header" style="margin-top: 8px;"><i data-lucide="rss" style="width: 14px;"></i> Real-Time Citizen Reports</div>
 
       <div class="incident-feed" id="incidentFeed">
         <div class="incident-card">
-          <div class="incident-meta">
-            <span>📍 Mangan, Sikkim</span>
-            <span>2 mins ago</span>
-          </div>
+          <div class="incident-meta"><span>📍 Mangan, Sikkim</span><span>2 mins ago</span></div>
           <div style="font-weight: 600; color: #f87171;">Rockfall & road mudflow on bypass</div>
           <div style="font-size: 9px; color: #9ca3af;">Citizen ID: #SK-401 • Verified by YOLO Vision AI</div>
         </div>
-
         <div class="incident-card" style="border-left-color: var(--accent-orange);">
-          <div class="incident-meta">
-            <span>📍 Haflong, Assam</span>
-            <span>18 mins ago</span>
-          </div>
+          <div class="incident-meta"><span>📍 Haflong, Assam</span><span>18 mins ago</span></div>
           <div style="font-weight: 600; color: #fbbf24;">Retaining wall crack widening (2cm)</div>
           <div style="font-size: 9px; color: #9ca3af;">Citizen ID: #AS-112 • Geo-Tagged Lat 25.17 N</div>
         </div>
-
         <div class="incident-card" style="border-left-color: var(--accent-red);">
-          <div class="incident-meta">
-            <span>📍 NH-29 Kohima</span>
-            <span>42 mins ago</span>
-          </div>
+          <div class="incident-meta"><span>📍 NH-29 Kohima</span><span>42 mins ago</span></div>
           <div style="font-weight: 600; color: #f87171;">Debris slide blocking uphill lane</div>
           <div style="font-size: 9px; color: #9ca3af;">Citizen ID: #NL-890 • BRO Dispatch alerted</div>
         </div>
@@ -755,7 +434,6 @@
 
   </div>
 
-  <!-- Incident Report Modal Simulator -->
   <div class="modal-backdrop" id="reportModal">
     <div class="modal-card">
       <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -770,8 +448,8 @@
       </p>
 
       <div style="display: flex; flex-direction: column; gap: 8px;">
-        <label style="font-size: 11px; color: var(--text-muted);">Hazard Category</label>
-        <select style="background: #1f2937; border: 1px solid #374151; color: white; padding: 8px; border-radius: 6px; font-size: 12px;">
+        <label for="hazardCategory" style="font-size: 11px; color: var(--text-muted);">Hazard Category</label>
+        <select id="hazardCategory" name="hazardCategory" style="background: #1f2937; border: 1px solid #374151; color: white; padding: 8px; border-radius: 6px; font-size: 12px;">
           <option>Fresh Road Crack / Subsidence</option>
           <option>Falling Boulders / Rockfall</option>
           <option>Mudflow / Debris Blocking Highway</option>
@@ -791,29 +469,23 @@
     </div>
   </div>
 
-  <!-- SMS Notification Toast Container -->
   <div class="toast-container" id="toastContainer"></div>
 
-  <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <script>
-    // Initialize Lucide Icons
+    const API_BASE = "https://bhoorakshak.onrender.com";
+
     lucide.createIcons();
 
-    // Initialize Map centered on North-East India
-    const map = L.map('map', {
-      zoomControl: false
-    }).setView([26.2006, 92.9376], 7); // Center of NER (Assam/Meghalaya)
-
-    // Add Zoom Control to Top Right
+    const map = L.map('map', { zoomControl: false }).setView([26.2006, 92.9376], 7);
     L.control.zoom({ position: 'topright' }).addTo(map);
 
-    // Tile Layers
-   const darkLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '&copy; OpenStreetMap contributors',
-  maxZoom: 19
-   }).addTo(map);
+    const darkLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 19
+    }).addTo(map);
+
     const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
       attribution: 'Tiles &copy; Esri World Imagery',
       maxZoom: 18
@@ -827,7 +499,7 @@
         map.addLayer(satelliteLayer);
         isSatellite = true;
         btn.classList.add('active');
-        btn.innerHTML = "🗺️ light Map View";
+        btn.innerHTML = "🗺️ Base Map View";
       } else {
         map.removeLayer(satelliteLayer);
         map.addLayer(darkLayer);
@@ -837,87 +509,50 @@
       }
     }
 
-    // Realistic NER Landslide Hotspots Data
-    let hotspots = []; // will be populated from the live API
-let markers = [];
+    // ---- Live hotspots (from backend, not hardcoded) ----
+    let hotspots = [];
+    let markers = [];
+    let currentFilter = 'all';
 
-function getColorForLevel(level) {
-  if (level === "CRITICAL") return "#ef4444";
-  if (level === "WARNING") return "#f59e0b";
-  return "#10b981";
-}
+    function getColorForLevel(level) {
+      if (level === "CRITICAL") return "#ef4444";
+      if (level === "WARNING") return "#f59e0b";
+      return "#10b981";
+    }
 
-function renderMarkers(filterType = 'all') {
-  markers.forEach(m => map.removeLayer(m));
-  markers = [];
+    function renderMarkers(filterType = 'all') {
+      currentFilter = filterType;
+      markers.forEach(m => map.removeLayer(m));
+      markers = [];
 
-  hotspots.forEach(spot => {
-    const color = getColorForLevel(spot.threat_level);
-    if (filterType === 'critical' && spot.threat_level !== 'CRITICAL') return;
+      hotspots.forEach(spot => {
+        const color = getColorForLevel(spot.threat_level);
+        if (filterType === 'critical' && spot.threat_level !== 'CRITICAL') return;
 
-    const circle = L.circleMarker([spot.latitude, spot.longitude], {
-      radius: spot.threat_level === 'CRITICAL' ? 14 : 10,
-      fillColor: color,
-      color: '#fff',
-      weight: 2,
-      opacity: 1,
-      fillOpacity: 0.85
-    }).addTo(map);
+        const circle = L.circleMarker([spot.latitude, spot.longitude], {
+          radius: spot.threat_level === 'CRITICAL' ? 14 : 10,
+          fillColor: color,
+          color: '#fff',
+          weight: 2,
+          opacity: 1,
+          fillOpacity: 0.85
+        }).addTo(map);
 
-    circle.bindPopup(`
-      <div class="popup-box">
-        <div class="popup-title" style="color: ${color}">
-          <span>●</span> ${spot.name}
-        </div>
-        <div style="font-size: 11px; margin-top: 4px;">
-          <strong>Risk Score:</strong> ${spot.risk_score}%<br>
-          <strong>Threat Level:</strong> ${spot.threat_level}<br>
-          <strong>24h Rainfall:</strong> ${spot.rainfall_24h_mm ?? 'N/A'} mm<br>
-          <strong>Slope:</strong> ${spot.slope_deg ?? 'N/A'}°
-        </div>
-        <div style="font-size: 10px; background: rgba(255,255,255,0.08); padding: 4px 6px; border-radius: 4px; margin-top: 4px; color: #fca5a5;">
-          ⚠️ ${spot.advisory ?? ''}
-        </div>
-      </div>
-    `);
-
-    markers.push(circle);
-  });
-}
-
-// Fetch live hotspots from backend and render them
-function loadHotspotsAndRender() {
-  fetch('https://bhoorakshak.onrender.com/api/hotspots')
-    .then(res => res.json())
-    .then(data => {
-      hotspots = data.hotspots;
-      renderMarkers('all');
-      console.log("[Member 1 Dashboard] Live Backend API connected successfully!");
-      showToast("🟢 Live Backend Connected", "Syncing real-time risk scores from Member 2 API.");
-    })
-    .catch(err => {
-      console.log("[Member 1 Dashboard] Failed to load live hotspots:", err);
-    });
-}
-
-loadHotspotsAndRender();
-
-        // Bind Custom HTML Popup
         circle.bindPopup(`
           <div class="popup-box">
-            <div class="popup-title" style="color: ${spot.color}">
+            <div class="popup-title" style="color: ${color}">
               <span>●</span> ${spot.name}
             </div>
             <div style="font-size: 11px; margin-top: 4px;">
-              <strong>Risk Level:</strong> ${spot.risk}<br>
-              <strong>24h Rainfall:</strong> ${spot.rain}<br>
-              <strong>Slope Angle:</strong> ${spot.slope}<br>
-              <strong>InSAR Subsidence:</strong> ${spot.insar}
+              <strong>Risk Score:</strong> ${spot.risk_score}%<br>
+              <strong>Threat Level:</strong> ${spot.threat_level}<br>
+              <strong>24h Rainfall:</strong> ${spot.rainfall_24h_mm ?? 'N/A'} mm<br>
+              <strong>Slope:</strong> ${spot.slope_deg ?? 'N/A'}°
             </div>
             <div style="font-size: 10px; background: rgba(255,255,255,0.08); padding: 4px 6px; border-radius: 4px; margin-top: 4px; color: #fca5a5;">
-              ⚠️ ${spot.advisory}
+              ⚠️ ${spot.advisory ?? ''}
             </div>
-            <button onclick="selectZoneForMobile('${spot.name}', '${spot.risk}', '${spot.rain}', '${spot.slope}')" 
+            <button onclick="selectZoneForMobile('${spot.name}', '${spot.threat_level} (${spot.risk_score}%)', '${spot.rainfall_24h_mm ?? 'N/A'} mm', '${spot.slope_deg ?? 'N/A'}°')"
                     style="margin-top: 6px; background: #3b82f6; border: none; color: white; padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer;">
               Sync to Mobile App
             </button>
@@ -928,17 +563,34 @@ loadHotspotsAndRender();
       });
     }
 
-    renderMarkers('all');
+    function loadHotspotsAndRender() {
+      fetch(`${API_BASE}/api/hotspots`)
+        .then(res => res.json())
+        .then(data => {
+          hotspots = data.hotspots || [];
+          renderMarkers(currentFilter);
+          console.log("[Member 1 Dashboard] Live Backend API connected successfully!");
+          showToast("🟢 Live Backend Connected", "Syncing real-time risk scores from Member 2 API.");
+        })
+        .catch(err => {
+          console.log("[Member 1 Dashboard] Failed to load live hotspots:", err);
+        });
+    }
+
+    loadHotspotsAndRender();
+
+    // Optional: refresh hotspots every 30s so map stays current without manual reload
+    setInterval(loadHotspotsAndRender, 30000);
 
     function filterHotspots(type) {
       document.querySelectorAll('.map-btn').forEach(btn => {
         if (btn.id !== 'btnEvac' && btn.id !== 'btnSat') btn.classList.remove('active');
       });
-      event.target.classList.add('active');
+      if (window.event) window.event.target.classList.add('active');
       renderMarkers(type);
     }
 
-    // Evacuation Corridors & Road Blockage Polylines
+    // ---- Evacuation route overlay ----
     let routeLayers = [];
     let showRoutes = false;
 
@@ -956,36 +608,16 @@ loadHotspotsAndRender();
       showRoutes = true;
       btn.classList.add('active');
 
-      // Blocked NH-10 Corridor (Siliguri - Sevoke - Teesta - Rangpo)
       const blockedRouteCoords = [
-        [26.8906, 88.4725],
-        [26.9850, 88.4680],
-        [27.0435, 88.4618],
-        [27.1764, 88.5284]
+        [26.8906, 88.4725], [26.9850, 88.4680], [27.0435, 88.4618], [27.1764, 88.5284]
       ];
-
-      const blockedLine = L.polyline(blockedRouteCoords, {
-        color: '#ef4444',
-        weight: 6,
-        dashArray: '8, 8',
-        opacity: 0.95
-      }).addTo(map);
+      const blockedLine = L.polyline(blockedRouteCoords, { color: '#ef4444', weight: 6, dashArray: '8, 8', opacity: 0.95 }).addTo(map);
       blockedLine.bindPopup("<strong style='color:#ef4444'>⛔ NH-10 BLOCKED (Teesta Slurry Slide)</strong><br>BRO Heavy Machinery deployed.");
 
-      // Safe Alternate Bypass (Sevoke -> Gorubathan -> Lava -> Algarah -> Rangpo)
       const safeRouteCoords = [
-        [26.8906, 88.4725],
-        [26.9734, 88.7025],
-        [27.0864, 88.6610],
-        [27.1120, 88.5850],
-        [27.1764, 88.5284]
+        [26.8906, 88.4725], [26.9734, 88.7025], [27.0864, 88.6610], [27.1120, 88.5850], [27.1764, 88.5284]
       ];
-
-      const safeLine = L.polyline(safeRouteCoords, {
-        color: '#10b981',
-        weight: 6,
-        opacity: 0.95
-      }).addTo(map);
+      const safeLine = L.polyline(safeRouteCoords, { color: '#10b981', weight: 6, opacity: 0.95 }).addTo(map);
       safeLine.bindPopup("<strong style='color:#10b981'>✅ SAFE ALTERNATE RELIEF CORRIDOR</strong><br>Route via Lava-Algarah open for NDRF relief & light vehicles.");
 
       routeLayers.push(blockedLine, safeLine);
@@ -993,20 +625,7 @@ loadHotspotsAndRender();
       showToast("🛣️ Rerouting Active", "NH-10 Blocked. Safe bypass drawn via Lava-Algarah.");
     }
 
-    // Auto-sync with Member 2 Backend API if running
-      fetch('https://bhoorakshak.onrender.com/api/hotspots')
-      .then(res => res.json())
-      .then(data => {
-        if (data.hotspots && data.hotspots.length > 0) {
-          console.log("[Member 1 Dashboard] Live Backend API connected successfully!");
-          showToast("🟢 Live Backend Connected", "Syncing real-time risk scores from Member 2 API.");
-        }
-      })
-      .catch(err => {
-        console.log("[Member 1 Dashboard] Using embedded regional telemetry.");
-      });
-
-    // Member 5: Sync map point directly to phone simulator
+    // ---- Mobile simulator sync ----
     function selectZoneForMobile(name, risk, rain, slope) {
       const card = document.getElementById('mobileAlertCard');
       card.innerHTML = `
@@ -1025,7 +644,7 @@ loadHotspotsAndRender();
       showToast("📲 Mobile App Synced", `Location updated to: ${name}`);
     }
 
-    // Modal Simulation for Citizen Reporting
+    // ---- Report modal ----
     function openReportModal() {
       document.getElementById('reportModal').style.display = 'flex';
     }
@@ -1034,43 +653,43 @@ loadHotspotsAndRender();
       document.getElementById('reportModal').style.display = 'none';
     }
 
-   function submitReportSuccess() {
-  closeReportModal();
+    function submitReportSuccess() {
+      closeReportModal();
 
-  fetch('https://bhoorakshak.onrender.com/api/report-incident', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      latitude: 27.0945,
-      longitude: 88.5284,
-      hazard_type: "Fresh Road Crack / Subsidence",
-      description: "Reported via GeoAlert Citizen app"
-    })
-  })
-  .then(res => res.json())
-  .then(data => {
-    showToast("✅ Incident Verified & Queued", "Report synced with District Emergency Operations.");
-    const feed = document.getElementById('incidentFeed');
-    const newCard = document.createElement('div');
-    newCard.className = 'incident-card';
-    newCard.style.borderLeftColor = '#3b82f6';
-    newCard.innerHTML = `
-      <div class="incident-meta">
-        <span>📍 NH-10 Km 42 (Teesta)</span>
-        <span>Just now</span>
-      </div>
-      <div style="font-weight: 600; color: #93c5fd;">Fresh Road Crack / Subsidence</div>
-      <div style="font-size: 9px; color: #9ca3af;">Report ID: #${data.incident.id} • Saved to backend</div>
-    `;
-    feed.insertBefore(newCard, feed.firstChild);
-  })
-  .catch(err => {
-    console.error("Failed to submit report:", err);
-    showToast("⚠️ Submission Failed", "Could not reach backend server.");
-  });
-}
+      fetch(`${API_BASE}/api/report-incident`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          latitude: 27.0945,
+          longitude: 88.5284,
+          hazard_type: "Fresh Road Crack / Subsidence",
+          description: "Reported via GeoAlert Citizen app"
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        showToast("✅ Incident Verified & Queued", "Report synced with District Emergency Operations.");
+        const feed = document.getElementById('incidentFeed');
+        const newCard = document.createElement('div');
+        newCard.className = 'incident-card';
+        newCard.style.borderLeftColor = '#3b82f6';
+        newCard.innerHTML = `
+          <div class="incident-meta">
+            <span>📍 NH-10 Km 42 (Teesta)</span>
+            <span>Just now</span>
+          </div>
+          <div style="font-weight: 600; color: #93c5fd;">Fresh Road Crack / Subsidence</div>
+          <div style="font-size: 9px; color: #9ca3af;">Report ID: #${data.incident.id} • Saved to backend</div>
+        `;
+        feed.insertBefore(newCard, feed.firstChild);
+      })
+      .catch(err => {
+        console.error("Failed to submit report:", err);
+        showToast("⚠️ Submission Failed", "Could not reach backend server.");
+      });
+    }
 
-    // Emergency SMS Toast Simulation (Member 5 feature)
+    // ---- Alerts / SOS ----
     function simulateCitizenSMS() {
       showToast(
         "📩 2G GSM EMERGENCY SMS",
@@ -1079,7 +698,7 @@ loadHotspotsAndRender();
     }
 
     function triggerMassAlert() {
-      fetch('https://bhoorakshak.onrender.com/api/trigger-sms-alert', {
+      fetch(`${API_BASE}/api/trigger-sms-alert`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1104,6 +723,7 @@ loadHotspotsAndRender();
       alert("🚨 SOS BEACON BROADCASTING!\n\nCurrent GPS coordinates (27.0435° N, 88.4618° E) dispatched to nearest NDRF Battalion & SDRF Control Room.");
     }
 
+    // ---- Toasts ----
     function showToast(title, message) {
       const container = document.getElementById('toastContainer');
       const toast = document.createElement('div');
@@ -1124,6 +744,29 @@ loadHotspotsAndRender();
         setTimeout(() => toast.remove(), 300);
       }, 5000);
     }
+
+    // ---- Live weather (Member 4) ----
+    function fetchLiveWeather(location = "Mangan (North Sikkim)") {
+      const url = `${API_BASE}/api/live-weather?location=${encodeURIComponent(location)}`;
+      fetch(url)
+        .then(res => {
+          if (!res.ok) throw new Error(`Weather API error: ${res.status}`);
+          return res.json();
+        })
+        .then(data => {
+          if (data.error) throw new Error(data.error);
+          console.log("[Member 4 Weather] Live weather received:", data);
+          showToast(
+            "🌧️ Live Weather Connected",
+            `${data.location}: ${data.temperature_c}°C | Rain: ${data.current_rain_rate_mm_hr} mm/hr | Humidity: ${data.relative_humidity_pct}%`
+          );
+        })
+        .catch(err => {
+          console.error("[Member 4 Weather] Connection failed:", err);
+        });
+    }
+
+    fetchLiveWeather();
   </script>
 </body>
 </html>
