@@ -1141,7 +1141,7 @@
   </script>
 </body>
 </html>
-fetch('http://localhost:8000/api/hotspots')
+fetch('https://dhararakshak-backend.onrender.com')
   .then(res => res.json())
   .then(data => {
     if (data.hotspots && data.hotspots.length > 0) {
@@ -1156,7 +1156,7 @@ fetch('http://localhost:8000/api/hotspots')
 
 // Member 4: Sync live weather from Backend API
 function fetchLiveWeather(location = "Mangan (North Sikkim)") {
-  const url = `http://localhost:8000/api/live-weather?location=${encodeURIComponent(location)}`;
+  const url = `https://dhararakshak-backend.onrender.com`;
 
   fetch(url)
     .then(res => {
