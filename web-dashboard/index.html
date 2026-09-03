@@ -810,12 +810,11 @@
     L.control.zoom({ position: 'topright' }).addTo(map);
 
     // Tile Layers
-    const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; MDoNER GeoAlert • CartoDB • OpenStreetMap',
-      maxZoom: 18,
-      subdomains: 'abcd'
-    }).addTo(map);
-
+    const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', {
+  attribution: '&copy; MDoNER GeoAlert • CartoDB • OpenStreetMap contributors',
+  maxZoom: 19,
+  subdomains: 'abcd'
+}).addTo(map);
     const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
       attribution: 'Tiles &copy; Esri World Imagery',
       maxZoom: 18
