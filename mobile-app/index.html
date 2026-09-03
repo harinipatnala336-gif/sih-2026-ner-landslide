@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0b0f19" />
+  <title>DharaRakshak Mobile | Citizen Early Warning & Reporting</title>
+  
+  <!-- Google Font: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: #111827;
+      --card-border: #1f2937;
+      --text: #f9fafb;
+      --text-muted: #9ca3af;
+      --accent-red: #ef4444;
+      --accent-orange: #f59e0b;
+      --accent-green: #10b981;
+      --accent-blue: #3b82f6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: var(--text);
+    }
+
+    /* Outer Phone Frame for Laptop Viewing (Becomes Fullscreen on Real Phone) */
+    .phone-container {
+      width: 100%;
+      max-width: 412px;
+      height: 100vh;
+      max-height: 860px;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 0 8px #1f2937;
+      border-radius: 36px;
+    }
+
+    @media (max-width: 500px) {
+      .phone-container {
+        max-height: 100vh;
+        border-radius: 0;
+        box-shadow: none;
+      }
+    }
+
+    /* Top Phone Notch / Status Bar */
+    .status-bar {
+      padding: 12px 20px 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: #9ca3af;
+      background: var(--bg);
+      z-index: 10;
+    }
+
+    .offline-indicator {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--accent-green);
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    /* App Header */
+    .app-header {
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .brand-name {
+      font-size: 16px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .brand-name span {
+      color: #38bdf8;
+    }
+
+    /* Main Scrollable Content View */
+    .content-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 20px 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Screen Tab Views */
+    .tab-view {
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+      animation: fadeIn 0.25s ease-out;
+    }
+
+    .tab-view.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Threat Status Card */
+    .threat-card {
+      background: linear-gradient(145deg, rgba(239, 68, 68, 0.25), rgba(17, 24, 39, 0.9));
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      border-radius: 20px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 10px 30px rgba(239, 68, 68, 0.15);
+    }
+
+    .threat-badge {
+      align-self: flex-start;
+      background: var(--accent-red);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .threat-title {
+      font-size: 20px;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .threat-location {
+      font-size: 12px;
+      color: #cbd5e1;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .metric-pill {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 10px;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .metric-pill .label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .metric-pill .value {
+      font-size: 15px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Action Buttons */
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 14px;
+      border: none;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform 0.1s, opacity 0.2s;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary {
+      background: var(--accent-blue);
+      color: #fff;
+    }
+
+    .btn-danger {
+      background: var(--accent-red);
+      color: #fff;
+    }
+
+    .btn-outline {
+      background: rgba(31, 41, 55, 0.6);
+      border: 1px solid var(--card-border);
+      color: var(--text);
+    }
+
+    /* Report Form */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .form-select, .form-input {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: #fff;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .photo-upload-box {
+      border: 2px dashed #374151;
+      border-radius: 16px;
+      padding: 24px;
+      text-align: center;
+      background: rgba(17, 24, 39, 0.5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .gps-tag {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399;
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 8px 12px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Bottom Tab Bar */
+    .bottom-nav {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 68px;
+      background: rgba(17, 24, 39, 0.96);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 0 10px;
+      z-index: 100;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 8px 12px;
+      border-radius: 12px;
+      transition: all 0.2s;
+    }
+
+    .nav-item.active {
+      color: #38bdf8;
+    }
+
+    /* Push SMS Banner Toast */
+    .mobile-toast {
+      position: absolute;
+      top: 50px;
+      left: 16px;
+      right: 16px;
+      background: #1e293b;
+      border: 1px solid #38bdf8;
+      border-radius: 14px;
+      padding: 12px 14px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.7);
+      display: none;
+      flex-direction: column;
+      gap: 4px;
+      z-index: 500;
+      animation: dropDown 0.3s ease-out;
+    }
+
+    @keyframes dropDown {
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Phone Mockup Container -->
+  <div class="phone-container">
+
+    <!-- Top Status Bar -->
+    <div class="status-bar">
+      <span>12:45 PM</span>
+      <div class="offline-indicator">
+        <i data-lucide="radio" style="width: 12px; height: 12px;"></i>
+        <span>2G RESILIENT</span>
+      </div>
+      <span>94% 🔋</span>
+    </div>
+
+    <!-- App Header -->
+    <header class="app-header">
+      <div class="brand-name">
+        <i data-lucide="mountain-snow" style="width: 18px; color: #38bdf8;"></i>
+        DharaRakshak <span>NER</span>
+      </div>
+      <span style="font-size: 10px; background: #374151; padding: 2px 7px; border-radius: 12px; font-weight: 700;">
+        PS 26001
+      </span>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="content-area">
+
+      <!-- ================= TAB 1: HOME HAZARD STATUS ================= -->
+      <section class="tab-view active" id="tab-home">
+        
+        <!-- Live Danger Card -->
+        <div class="threat-card">
+          <div class="threat-badge">
+            <i data-lucide="alert-triangle" style="width: 12px; height: 12px;"></i>
+            CRITICAL THREAT (88.4%)
+          </div>
+
+          <h2 class="threat-title">NH-10 Teesta Corridor</h2>
+          <div class="threat-location">
+            <i data-lucide="map-pin" style="width: 14px;"></i>
+            Kalimpong - Sikkim Border (Km 42)
+          </div>
+
+          <div class="metrics-grid">
+            <div class="metric-pill">
+              <span class="label">🌧️ 24h Rainfall</span>
+              <span class="value" style="color: #f87171;">185.0 mm</span>
+            </div>
+            <div class="metric-pill">
+              <span class="label">⛰️ Slope Angle</span>
+              <span class="value" style="color: #fbbf24;">46° Critical</span>
+            </div>
+            <div class="metric-pill">
+              <span class="label">💧 Soil Saturation</span>
+              <span class="value" style="color: #f87171;">94.2%</span>
+            </div>
+            <div class="metric-pill">
+              <span class="label">🛰️ Radar Creep</span>
+              <span class="value" style="color: #f87171;">+5.1 mm/wk</span>
+            </div>
+          </div>
+
+          <div style="font-size: 11px; background: rgba(0,0,0,0.3); padding: 8px 10px; border-radius: 8px; margin-top: 4px; color: #fca5a5;">
+            ⚠️ <strong>Advisory:</strong> Traffic suspended by District Magistrate. Severe mud slurry risk.
+          </div>
+        </div>
+
+        <!-- Quick Action Buttons -->
+        <button class="btn btn-primary" onclick="switchTab('report')">
+          <i data-lucide="camera" style="width: 16px;"></i>
+          Report Road Crack / Rockfall
+        </button>
+
+        <button class="btn btn-outline" onclick="triggerSimulatedSMS()">
+          <i data-lucide="message-square" style="width: 16px; color: #38bdf8;"></i>
+          Test 2G Emergency Broadcast SMS
+        </button>
+
+        <button class="btn btn-danger" onclick="switchTab('sos')">
+          <i data-lucide="phone-call" style="width: 16px;"></i>
+          Emergency SOS (NDRF 1078)
+        </button>
+      </section>
+
+      <!-- ================= TAB 2: CITIZEN INCIDENT REPORT ================= -->
+      <section class="tab-view" id="tab-report">
+        <div>
+          <h2 style="font-size: 18px; font-weight: 800;">Citizen Ground Report</h2>
+          <p style="font-size: 11px; color: var(--text-muted);">
+            Your ground observation verifies the AI slope-failure prediction.
+          </p>
+        </div>
+
+        <div class="photo-upload-box" onclick="simulateCameraCapture()">
+          <i data-lucide="camera" style="width: 32px; height: 32px; color: #38bdf8;"></i>
+          <div style="font-size: 13px; font-weight: 700;" id="photoLabel">Tap to Capture Photo</div>
+          <div style="font-size: 10px; color: var(--text-muted);">Auto-analyzed by YOLOv8 Vision AI</div>
+        </div>
+
+        <div class="gps-tag">
+          <span>📍 GPS Coordinates</span>
+          <strong id="gpsCoords">27.0435° N, 88.4618° E (±3m)</strong>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Hazard Classification</label>
+          <select class="form-select" id="hazardSelect">
+            <option>Fresh Road Crack / Subsidence</option>
+            <option>Falling Boulders / Rockfall</option>
+            <option>Mudflow / Debris Blocking Highway</option>
+            <option>Leaning Trees / Power Lines on Slope</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Local Landmark / Notes</label>
+          <input class="form-input" id="hazardNotes" placeholder="e.g. 500m before Teesta bridge, northbound" value="Near Teesta bridge, crack widening across road" />
+        </div>
+
+        <button class="btn btn-primary" onclick="submitMobileReport()">
+          <i data-lucide="send" style="width: 16px;"></i>
+          Submit Incident (Offline-Cached)
+        </button>
+      </section>
+
+      <!-- ================= TAB 3: SAFE EVACUATION MAP ================= -->
+      <section class="tab-view" id="tab-routes">
+        <div>
+          <h2 style="font-size: 18px; font-weight: 800;">Safe Alternate Routes</h2>
+          <p style="font-size: 11px; color: var(--text-muted);">
+            Real-time highway status coordinated with Border Roads Organisation (BRO).
+          </p>
+        </div>
+
+        <div style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); border-radius: 14px; padding: 14px;">
+          <div style="font-size: 12px; font-weight: 800; color: #f87171; display: flex; align-items: center; gap: 6px;">
+            <span>⛔</span> NH-10 (Siliguri - Gangtok) : BLOCKED
+          </div>
+          <p style="font-size: 11px; color: #cbd5e1; margin-top: 4px;">
+            Slurry mudflow at Km 42 (Teesta Bazar). Clearance expected in 8-12 hours.
+          </p>
+        </div>
+
+        <div style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); border-radius: 14px; padding: 14px;">
+          <div style="font-size: 12px; font-weight: 800; color: #34d399; display: flex; align-items: center; gap: 6px;">
+            <span>✅</span> ALTERNATE BYPASS OPEN
+          </div>
+          <p style="font-size: 11px; color: #cbd5e1; margin-top: 4px;">
+            Route via <strong>Gorubathan → Lava → Algarah → Rangpo</strong> is safe for light vehicles & ambulances.
+          </p>
+        </div>
+
+        <div style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 14px;">
+          <div style="font-size: 12px; font-weight: 700;">Nearest Relief Shelter</div>
+          <div style="font-size: 13px; font-weight: 800; color: #38bdf8; margin-top: 2px;">Rangpo Community Hall (5.4 km)</div>
+          <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">Capacity: 400 persons • Medical Aid Post Available</div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 4: SOS & HELPLINES ================= -->
+      <section class="tab-view" id="tab-sos">
+        <div style="text-align: center;">
+          <h2 style="font-size: 20px; font-weight: 800; color: var(--accent-red);">EMERGENCY SOS</h2>
+          <p style="font-size: 11px; color: var(--text-muted);">
+            Broadcasts your GPS coordinates to NDRF & State Emergency Operation Center.
+          </p>
+        </div>
+
+        <button class="btn btn-danger" style="padding: 20px; font-size: 16px; border-radius: 20px; box-shadow: 0 10px 30px rgba(239, 68, 68, 0.4);" onclick="triggerSOSBeacon()">
+          <i data-lucide="radio-tower" style="width: 22px; height: 22px;"></i>
+          BROADCAST SOS BEACON
+        </button>
+
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
+          <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">
+            One-Touch Emergency Helplines
+          </div>
+
+          <a href="tel:1078" style="text-decoration: none;">
+            <div style="background: var(--card-bg); border: 1px solid var(--card-border); padding: 12px 14px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; color: white;">
+              <div>
+                <div style="font-size: 12px; font-weight: 700;">NDRF National Disaster Helpline</div>
+                <div style="font-size: 11px; color: #38bdf8;">Toll Free 24x7</div>
+              </div>
+              <span style="font-size: 16px; font-weight: 800; color: #34d399;">1078</span>
+            </div>
+          </a>
+
+          <a href="tel:112" style="text-decoration: none;">
+            <div style="background: var(--card-bg); border: 1px solid var(--card-border); padding: 12px 14px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; color: white;">
+              <div>
+                <div style="font-size: 12px; font-weight: 700;">National Emergency Response</div>
+                <div style="font-size: 11px; color: #38bdf8;">Police / Ambulance / Fire</div>
+              </div>
+              <span style="font-size: 16px; font-weight: 800; color: #34d399;">112</span>
+            </div>
+          </a>
+
+          <a href="tel:03612237011" style="text-decoration: none;">
+            <div style="background: var(--card-bg); border: 1px solid var(--card-border); padding: 12px 14px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; color: white;">
+              <div>
+                <div style="font-size: 12px; font-weight: 700;">MDoNER Regional Disaster Cell</div>
+                <div style="font-size: 11px; color: #38bdf8;">Guwahati Control Room</div>
+              </div>
+              <span style="font-size: 14px; font-weight: 800; color: #34d399;">0361-2237011</span>
+            </div>
+          </a>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" id="btn-tab-home" onclick="switchTab('home')">
+        <i data-lucide="shield-alert" style="width: 20px;"></i>
+        <span>Status</span>
+      </button>
+
+      <button class="nav-item" id="btn-tab-report" onclick="switchTab('report')">
+        <i data-lucide="camera" style="width: 20px;"></i>
+        <span>Report</span>
+      </button>
+
+      <button class="nav-item" id="btn-tab-routes" onclick="switchTab('routes')">
+        <i data-lucide="map" style="width: 20px;"></i>
+        <span>Routes</span>
+      </button>
+
+      <button class="nav-item" id="btn-tab-sos" onclick="switchTab('sos')">
+        <i data-lucide="phone-call" style="width: 20px;"></i>
+        <span>SOS</span>
+      </button>
+    </nav>
+
+    <!-- Push SMS Simulation Toast -->
+    <div class="mobile-toast" id="mobileToast">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 10px; font-weight: 800; color: #38bdf8;">📲 2G GSM EMERGENCY BROADCAST</span>
+        <span style="font-size: 9px; color: #94a3b8;">NOW</span>
+      </div>
+      <p style="font-size: 11px; color: #f8fafc; font-weight: 500; line-height: 1.3;" id="toastMessage">
+        MDoNER ALERT: Severe landslide danger on NH-10. Immediate evacuation advisory in effect. Toll-free NDRF: 1078.
+      </p>
+    </div>
+
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    // Tab Switching Logic
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-view').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+
+      const targetTab = document.getElementById('tab-' + tabName);
+      const targetBtn = document.getElementById('btn-tab-' + tabName);
+
+      if (targetTab) targetTab.classList.add('active');
+      if (targetBtn) targetBtn.classList.add('active');
+
+      // Re-trigger icon creation for dynamic views
+      lucide.createIcons();
+    }
+
+    // Camera Photo Simulation
+    let photoCaptured = false;
+    function simulateCameraCapture() {
+      photoCaptured = true;
+      const label = document.getElementById('photoLabel');
+      label.innerHTML = "✅ Photo Attached: crack_nh10_km42.jpg";
+      label.style.color = "#34d399";
+      showBanner("📸 Photo Captured", "Analyzed by YOLOv8: 89% confidence Road Crack.");
+    }
+
+    // Submit Citizen Incident to Backend API
+    function submitMobileReport() {
+      const hazard = document.getElementById('hazardSelect').value;
+      const notes = document.getElementById('hazardNotes').value;
+
+      // Try posting to Member 2's backend
+      fetch('http://localhost:8000/api/report-incident', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          latitude: 27.0435,
+          longitude: 88.4618,
+          hazard_type: hazard,
+          description: notes
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        showBanner("✅ Incident Transmitted to Ops", "Report verified and mapped on District Command Dashboard.");
+        setTimeout(() => switchTab('home'), 1500);
+      })
+      .catch(err => {
+        // Offline Cache Fallback for Remote Hill Terrain
+        showBanner("💾 Saved in 2G Offline Cache", "No internet on hill pass. Will auto-sync when network reconnects.");
+        setTimeout(() => switchTab('home'), 1500);
+      });
+    }
+
+    function triggerSimulatedSMS() {
+      showBanner(
+        "📲 2G GSM EMERGENCY BROADCAST",
+        "MDoNER ALERT: Severe landslide danger on NH-10. Immediate evacuation advisory in effect. Toll-free NDRF: 1078."
+      );
+    }
+
+    function triggerSOSBeacon() {
+      if (navigator.vibrate) {
+        navigator.vibrate([300, 100, 300, 100, 300]);
+      }
+      showBanner("🚨 SOS BEACON BROADCASTING", "Coordinates 27.0435 N, 88.4618 E sent to nearest NDRF team & SDRF.");
+    }
+
+    function showBanner(title, message) {
+      const toast = document.getElementById('mobileToast');
+      const msg = document.getElementById('toastMessage');
+      msg.innerHTML = `<strong>${title}:</strong> ${message}`;
+      toast.style.display = 'flex';
+
+      setTimeout(() => {
+        toast.style.display = 'none';
+      }, 5000);
+    }
+  </script>
+</body>
+</html>
