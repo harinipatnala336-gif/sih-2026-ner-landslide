@@ -1141,3 +1141,49 @@
   </script>
 </body>
 </html>
+fetch('http://localhost:8000/api/hotspots')
+  .then(res => res.json())
+  .then(data => {
+    if (data.hotspots && data.hotspots.length > 0) {
+      console.log("[Member 1 Dashboard] Live Backend API connected successfully!");
+      showToast("🟢 Live Backend Connected", "Syncing real-time risk scores from Member 2 API.");
+    }
+  })
+  .catch(err => {
+    console.log("[Member 1 Dashboard] Using embedded regional telemetry.");
+  });
+
+
+// Member 4: Sync live weather from Backend API
+function fetchLiveWeather(location = "Mangan (North Sikkim)") {
+  const url = `http://localhost:8000/api/live-weather?location=${encodeURIComponent(location)}`;
+
+  fetch(url)
+    .then(res => {
+      if (!res.ok) {
+        throw new Error(`Weather API error: ${res.status}`);
+      }
+      return res.json();
+    })
+    .then(data => {
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      console.log("[Member 4 Weather] Live weather received:", data);
+
+      showToast(
+        "🌧️ Live Weather Connected",
+        `${data.location}: ${data.temperature_c}°C | Rain: ${data.current_rain_rate_mm_hr} mm/hr | Humidity: ${data.relative_humidity_pct}%`
+      );
+    })
+    .catch(err => {
+      console.error("[Member 4 Weather] Connection failed:", err);
+    });
+}
+
+fetchLiveWeather();
+
+
+// Member 5: Sync map point directly to phone simulator
+function selectZoneForMobile(name, risk, rain, slope) {
