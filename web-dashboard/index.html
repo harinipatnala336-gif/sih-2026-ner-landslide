@@ -810,10 +810,10 @@
     L.control.zoom({ position: 'topright' }).addTo(map);
 
     // Tile Layers
-    const darkLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-  attribution: '&copy; MDoNER GeoAlert • Esri Dark Gray Canvas',
-  maxZoom: 16
-}).addTo(map);
+   const darkLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap contributors',
+  maxZoom: 19
+   }).addTo(map);
     const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
       attribution: 'Tiles &copy; Esri World Imagery',
       maxZoom: 18
@@ -827,7 +827,7 @@
         map.addLayer(satelliteLayer);
         isSatellite = true;
         btn.classList.add('active');
-        btn.innerHTML = "🗺️ Dark Map View";
+        btn.innerHTML = "🗺️ light Map View";
       } else {
         map.removeLayer(satelliteLayer);
         map.addLayer(darkLayer);
