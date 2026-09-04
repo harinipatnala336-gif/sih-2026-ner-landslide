@@ -513,6 +513,11 @@
     let hotspots = [];
     let markers = [];
     let currentFilter = 'all';
+    let selectedZone = {
+    name: "NH-10 Teesta Stretch",
+    latitude: 27.0945,
+    longitude: 88.5284
+    };
 
     function getColorForLevel(level) {
       if (level === "CRITICAL") return "#ef4444";
@@ -552,8 +557,7 @@
             <div style="font-size: 10px; background: rgba(255,255,255,0.08); padding: 4px 6px; border-radius: 4px; margin-top: 4px; color: #fca5a5;">
               ⚠️ ${spot.advisory ?? ''}
             </div>
-            <button onclick="selectZoneForMobile('${spot.name}', '${spot.threat_level} (${spot.risk_score}%)', '${spot.rainfall_24h_mm ?? 'N/A'} mm', '${spot.slope_deg ?? 'N/A'}°')"
-                    style="margin-top: 6px; background: #3b82f6; border: none; color: white; padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer;">
+<button onclick="selectZoneForMobile('${spot.name}', '${spot.threat_level} (${spot.risk_score}%)', '${spot.rainfall_24h_mm ?? 'N/A'} mm', '${spot.slope_deg ?? 'N/A'}°', ${spot.latitude}, ${spot.longitude})"                    style="margin-top: 6px; background: #3b82f6; border: none; color: white; padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer;">
               Sync to Mobile App
             </button>
           </div>
@@ -626,23 +630,25 @@
     }
 
     // ---- Mobile simulator sync ----
-    function selectZoneForMobile(name, risk, rain, slope) {
-      const card = document.getElementById('mobileAlertCard');
-      card.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span style="font-size: 11px; font-weight: 700; color: #fca5a5;">HAZARD SYNCHRONIZED</span>
-          <span style="font-size: 10px; background: #ef4444; padding: 2px 6px; border-radius: 4px; font-weight: 800;">${risk.split(' ')[0]}</span>
-        </div>
-        <h3 style="font-size: 13px; font-weight: 700;">${name}</h3>
-        <p style="font-size: 10px; color: #d1d5db; line-height: 1.3;">
-          Live telemetry updated from satellite InSAR & IMD radar station.
-        </p>
-        <div style="font-size: 10px; background: rgba(0,0,0,0.3); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-          🌧️ Rain: <strong>${rain}</strong> | 🧭 Slope: <strong>${slope}</strong>
-        </div>
-      `;
-      showToast("📲 Mobile App Synced", `Location updated to: ${name}`);
-    }
+   function selectZoneForMobile(name, risk, rain, slope, lat, lng) {
+  selectedZone = { name: name, latitude: lat, longitude: lng };
+
+  const card = document.getElementById('mobileAlertCard');
+  card.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <span style="font-size: 11px; font-weight: 700; color: #fca5a5;">HAZARD SYNCHRONIZED</span>
+      <span style="font-size: 10px; background: #ef4444; padding: 2px 6px; border-radius: 4px; font-weight: 800;">${risk.split(' ')[0]}</span>
+    </div>
+    <h3 style="font-size: 13px; font-weight: 700;">${name}</h3>
+    <p style="font-size: 10px; color: #d1d5db; line-height: 1.3;">
+      Live telemetry updated from satellite InSAR & IMD radar station.
+    </p>
+    <div style="font-size: 10px; background: rgba(0,0,0,0.3); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
+      🌧️ Rain: <strong>${rain}</strong> | 🧭 Slope: <strong>${slope}</strong>
+    </div>
+  `;
+  showToast("📲 Mobile App Synced", `Location updated to: ${name}`);
+}
 
     // ---- Report modal ----
     function openReportModal() {
@@ -653,41 +659,41 @@
       document.getElementById('reportModal').style.display = 'none';
     }
 
-    function submitReportSuccess() {
-      closeReportModal();
+   function submitReportSuccess() {
+  closeReportModal();
 
-      fetch(`${API_BASE}/api/report-incident`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          latitude: 27.0945,
-          longitude: 88.5284,
-          hazard_type: "Fresh Road Crack / Subsidence",
-          description: "Reported via GeoAlert Citizen app"
-        })
-      })
-      .then(res => res.json())
-      .then(data => {
-        showToast("✅ Incident Verified & Queued", "Report synced with District Emergency Operations.");
-        const feed = document.getElementById('incidentFeed');
-        const newCard = document.createElement('div');
-        newCard.className = 'incident-card';
-        newCard.style.borderLeftColor = '#3b82f6';
-        newCard.innerHTML = `
-          <div class="incident-meta">
-            <span>📍 NH-10 Km 42 (Teesta)</span>
-            <span>Just now</span>
-          </div>
-          <div style="font-weight: 600; color: #93c5fd;">Fresh Road Crack / Subsidence</div>
-          <div style="font-size: 9px; color: #9ca3af;">Report ID: #${data.incident.id} • Saved to backend</div>
-        `;
-        feed.insertBefore(newCard, feed.firstChild);
-      })
-      .catch(err => {
-        console.error("Failed to submit report:", err);
-        showToast("⚠️ Submission Failed", "Could not reach backend server.");
-      });
-    }
+  fetch(`${API_BASE}/api/report-incident`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      latitude: selectedZone.latitude,
+      longitude: selectedZone.longitude,
+      hazard_type: "Fresh Road Crack / Subsidence",
+      description: `Reported via GeoAlert Citizen app near ${selectedZone.name}`
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    showToast("✅ Incident Verified & Queued", "Report synced with District Emergency Operations.");
+    const feed = document.getElementById('incidentFeed');
+    const newCard = document.createElement('div');
+    newCard.className = 'incident-card';
+    newCard.style.borderLeftColor = '#3b82f6';
+    newCard.innerHTML = `
+      <div class="incident-meta">
+        <span>📍 ${selectedZone.name}</span>
+        <span>Just now</span>
+      </div>
+      <div style="font-weight: 600; color: #93c5fd;">Fresh Road Crack / Subsidence</div>
+      <div style="font-size: 9px; color: #9ca3af;">Report ID: #${data.incident.id} • Saved to backend</div>
+    `;
+    feed.insertBefore(newCard, feed.firstChild);
+  })
+  .catch(err => {
+    console.error("Failed to submit report:", err);
+    showToast("⚠️ Submission Failed", "Could not reach backend server.");
+  });
+}
 
     // ---- Alerts / SOS ----
     function simulateCitizenSMS() {
