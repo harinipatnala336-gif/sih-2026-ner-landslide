@@ -300,10 +300,10 @@
     </div>
 
     <div class="header-pills">
-      <div class="pill danger">
-        <span class="pulse-dot"></span>
-        <span><strong>CRITICAL ALERT:</strong> NH-10 Teesta Corridor Blocked</span>
-      </div>
+      <div class="pill danger" id="criticalAlertPill" style="display: none;">
+  <span class="pulse-dot"></span>
+  <span><strong>CRITICAL ALERT:</strong> <span id="criticalAlertText">Loading...</span></span>
+  </div>
       <div class="pill">
         <i data-lucide="satellite" style="width: 14px; height: 14px; color: #38bdf8;"></i>
         <span>Sentinel-1 SAR: Active (6h sync)</span>
@@ -556,6 +556,20 @@
         .then(res => res.json())
         .then(data => {
           hotspots = data.hotspots || [];
+          function loadHotspotsAndRender() {
+  fetch(`${API_BASE}/api/hotspots`)
+    .then(res => res.json())
+    .then(data => {
+      hotspots = data.hotspots || [];
+      renderMarkers(currentFilter);
+      updateCriticalAlertBanner();
+      console.log("[Member 1 Dashboard] Live Backend API connected successfully!");
+      showToast("🟢 Live Backend Connected", "Syncing real-time risk scores from Member 2 API.");
+    })
+    .catch(err => {
+      console.log("[Member 1 Dashboard] Failed to load live hotspots:", err);
+    });
+}
           renderMarkers(currentFilter);
           console.log("[Member 1 Dashboard] Live Backend API connected successfully!");
           showToast("🟢 Live Backend Connected", "Syncing real-time risk scores from Member 2 API.");
@@ -566,6 +580,35 @@
     }
 
     loadHotspotsAndRender();
+    function updateCriticalAlertBanner() {
+  const pill = document.getElementById('criticalAlertPill');
+  const textEl = document.getElementById('criticalAlertText');
+
+  const criticalZones = hotspots.filter(h => h.threat_level === 'CRITICAL');
+
+  if (criticalZones.length === 0) {
+    pill.style.display = 'none';
+    return;
+  }
+
+  // Show the highest-risk critical zone if there are multiple
+  const worst = criticalZones.reduce((a, b) => (a.risk_score > b.risk_score ? a : b));
+  textEl.textContent = `${worst.name} — Risk ${worst.risk_score}%`;
+  pill.style.display = 'flex';
+}
+    function timeAgo(timestamp) {
+  const now = new Date();
+  const then = new Date(timestamp + 'Z'); // ensure UTC is parsed correctly
+  const seconds = Math.floor((now - then) / 1000);
+
+  if (seconds < 60) return "Just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} min${minutes > 1 ? 's' : ''} ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} day${days > 1 ? 's' : ''} ago`;
+}
     function loadCitizenReportsAndRender() {
   fetch(`${API_BASE}/api/citizen-reports`)
     .then(res => res.json())
@@ -578,7 +621,7 @@
         card.innerHTML = `
           <div class="incident-meta">
             <span>📍 Lat ${r.latitude.toFixed(4)}, Lng ${r.longitude.toFixed(4)}</span>
-            <span>${new Date(r.timestamp).toLocaleTimeString()}</span>
+            <span>${timeAgo(r.timestamp)}</span>
           </div>
           <div style="font-weight: 600; color: #93c5fd;">${r.hazard_type}</div>
           <div style="font-size: 9px; color: #9ca3af;">Report ID: #${r.id}${r.description ? ' • ' + r.description : ''}</div>
