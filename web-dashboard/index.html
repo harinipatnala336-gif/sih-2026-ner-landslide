@@ -474,7 +474,23 @@
       attribution: 'Tiles &copy; Esri World Imagery',
       maxZoom: 18
     });
+    const translations = {
+  hi: {
+    massAlert: (towers) => `आपातकालीन चेतावनी: ${towers} मोबाइल टावरों में भेजा गया। तत्काल सुरक्षित स्थान पर जाएं।`,
+    citizenSms: "MDoNER चेतावनी: NH-10 पर गंभीर भूस्खलन का खतरा। तुरंत सुरक्षित स्थान पर जाएं। NDRF हेल्पलाइन: 1078।",
+    reportSuccess: "घटना सत्यापित और दर्ज की गई। जिला आपदा प्रबंधन को सूचित किया गया।",
+    reportFailed: "सबमिट करने में विफल। बैकएंड सर्वर से संपर्क नहीं हो सका।",
+    liveBackendConnected: "लाइव बैकएंड कनेक्ट हो गया। रियल-टाइम जोखिम स्कोर सिंक हो रहे हैं।",
+    mobileSynced: (name) => `स्थान अपडेट किया गया: ${name}`,
+    criticalAlert: (name, score) => `${name} — जोखिम ${score}%`
+  }
+};
 
+const currentLang = 'hi'; // change to 'en' to revert to English
+function t(key, ...args) {
+  const entry = translations[currentLang][key];
+  return typeof entry === 'function' ? entry(...args) : entry;
+}
     let isSatellite = false;
     function toggleSatelliteView() {
       const btn = document.getElementById('btnSat');
@@ -564,7 +580,7 @@
       renderMarkers(currentFilter);
       updateCriticalAlertBanner();
       console.log("[Member 1 Dashboard] Live Backend API connected successfully!");
-      showToast("🟢 Live Backend Connected", "Syncing real-time risk scores from Member 2 API.");
+      showToast("🟢 Live Backend Connected", t('liveBackendConnected'));
     })
     .catch(err => {
       console.log("[Member 1 Dashboard] Failed to load live hotspots:", err);
@@ -593,7 +609,7 @@
 
   // Show the highest-risk critical zone if there are multiple
   const worst = criticalZones.reduce((a, b) => (a.risk_score > b.risk_score ? a : b));
-  textEl.textContent = `${worst.name} — Risk ${worst.risk_score}%`;
+ textEl.textContent = t('criticalAlert', worst.name, worst.risk_score);
   pill.style.display = 'flex';
 }
     function timeAgo(timestamp) {
@@ -700,7 +716,7 @@ loadCitizenReportsAndRender();
       🌧️ Rain: <strong>${rain}</strong> | 🧭 Slope: <strong>${slope}</strong>
     </div>
   `;
-  showToast("📲 Mobile App Synced", `Location updated to: ${name}`);
+  showToast("📲 Mobile App Synced", t('mobileSynced', name));
 }
 
     // ---- Report modal ----
@@ -728,24 +744,19 @@ loadCitizenReportsAndRender();
     })
   })
   .then(res => res.json())
-  .then(data => {
-    showToast("✅ Incident Verified & Queued", "Report synced with District Emergency Operations.");
-    loadCitizenReportsAndRender();
-  })
-  .catch(err => {
-    console.error("Failed to submit report:", err);
-    showToast("⚠️ Submission Failed", "Could not reach backend server.");
-  });
-}
-
+ .then(data => {
+  showToast("✅ Incident Verified & Queued", t('reportSuccess'));
+  loadCitizenReportsAndRender();
+})
+.catch(err => {
+  console.error("Failed to submit report:", err);
+  showToast("⚠️ Submission Failed", t('reportFailed'));
+});
+  }
     // ---- Alerts / SOS ----
-    function simulateCitizenSMS() {
-      showToast(
-        "📩 2G GSM EMERGENCY SMS",
-        "MDoNER ALERT: Severe landslide danger on NH-10. Immediate evacuation advisory in effect. Toll-free NDRF: 1078."
-      );
-    }
-
+   function simulateCitizenSMS() {
+  showToast("📩 2G GSM EMERGENCY SMS", t('citizenSms'));
+}
     function triggerMassAlert() {
       fetch(`${API_BASE}/api/trigger-sms-alert`, {
         method: 'POST',
@@ -759,7 +770,7 @@ loadCitizenReportsAndRender();
       .then(data => {
         showToast(
           "🚨 MASS CELL-BROADCAST DISPATCHED",
-          `Bulk alerts transmitted across ${data.dispatched_towers} mountain GSM towers.`
+          t('massAlert', data.dispatched_towers)
         );
       })
       .catch(err => {
