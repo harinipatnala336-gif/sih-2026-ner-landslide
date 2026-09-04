@@ -413,23 +413,7 @@
 
       <div class="section-header" style="margin-top: 8px;"><i data-lucide="rss" style="width: 14px;"></i> Real-Time Citizen Reports</div>
 
-      <div class="incident-feed" id="incidentFeed">
-        <div class="incident-card">
-          <div class="incident-meta"><span>📍 Mangan, Sikkim</span><span>2 mins ago</span></div>
-          <div style="font-weight: 600; color: #f87171;">Rockfall & road mudflow on bypass</div>
-          <div style="font-size: 9px; color: #9ca3af;">Citizen ID: #SK-401 • Verified by YOLO Vision AI</div>
-        </div>
-        <div class="incident-card" style="border-left-color: var(--accent-orange);">
-          <div class="incident-meta"><span>📍 Haflong, Assam</span><span>18 mins ago</span></div>
-          <div style="font-weight: 600; color: #fbbf24;">Retaining wall crack widening (2cm)</div>
-          <div style="font-size: 9px; color: #9ca3af;">Citizen ID: #AS-112 • Geo-Tagged Lat 25.17 N</div>
-        </div>
-        <div class="incident-card" style="border-left-color: var(--accent-red);">
-          <div class="incident-meta"><span>📍 NH-29 Kohima</span><span>42 mins ago</span></div>
-          <div style="font-weight: 600; color: #f87171;">Debris slide blocking uphill lane</div>
-          <div style="font-size: 9px; color: #9ca3af;">Citizen ID: #NL-890 • BRO Dispatch alerted</div>
-        </div>
-      </div>
+      <div class="incident-feed" id="incidentFeed"></div>
     </aside>
 
   </div>
@@ -582,6 +566,32 @@
     }
 
     loadHotspotsAndRender();
+    function loadCitizenReportsAndRender() {
+  fetch(`${API_BASE}/api/citizen-reports`)
+    .then(res => res.json())
+    .then(data => {
+      const feed = document.getElementById('incidentFeed');
+      feed.innerHTML = ''; // clear before rendering
+      (data.reports || []).forEach(r => {
+        const card = document.createElement('div');
+        card.className = 'incident-card';
+        card.innerHTML = `
+          <div class="incident-meta">
+            <span>📍 Lat ${r.latitude.toFixed(4)}, Lng ${r.longitude.toFixed(4)}</span>
+            <span>${new Date(r.timestamp).toLocaleTimeString()}</span>
+          </div>
+          <div style="font-weight: 600; color: #93c5fd;">${r.hazard_type}</div>
+          <div style="font-size: 9px; color: #9ca3af;">Report ID: #${r.id}${r.description ? ' • ' + r.description : ''}</div>
+        `;
+        feed.appendChild(card);
+      });
+    })
+    .catch(err => {
+      console.error("Failed to load citizen reports:", err);
+    });
+}
+
+loadCitizenReportsAndRender();
 
     // Optional: refresh hotspots every 30s so map stays current without manual reload
     setInterval(loadHotspotsAndRender, 30000);
@@ -659,8 +669,10 @@
       document.getElementById('reportModal').style.display = 'none';
     }
 
-   function submitReportSuccess() {
+  function submitReportSuccess() {
   closeReportModal();
+
+  const hazardType = document.getElementById('hazardCategory').value;
 
   fetch(`${API_BASE}/api/report-incident`, {
     method: 'POST',
@@ -668,26 +680,14 @@
     body: JSON.stringify({
       latitude: selectedZone.latitude,
       longitude: selectedZone.longitude,
-      hazard_type: "Fresh Road Crack / Subsidence",
+      hazard_type: hazardType,
       description: `Reported via GeoAlert Citizen app near ${selectedZone.name}`
     })
   })
   .then(res => res.json())
   .then(data => {
     showToast("✅ Incident Verified & Queued", "Report synced with District Emergency Operations.");
-    const feed = document.getElementById('incidentFeed');
-    const newCard = document.createElement('div');
-    newCard.className = 'incident-card';
-    newCard.style.borderLeftColor = '#3b82f6';
-    newCard.innerHTML = `
-      <div class="incident-meta">
-        <span>📍 ${selectedZone.name}</span>
-        <span>Just now</span>
-      </div>
-      <div style="font-weight: 600; color: #93c5fd;">Fresh Road Crack / Subsidence</div>
-      <div style="font-size: 9px; color: #9ca3af;">Report ID: #${data.incident.id} • Saved to backend</div>
-    `;
-    feed.insertBefore(newCard, feed.firstChild);
+    loadCitizenReportsAndRender();
   })
   .catch(err => {
     console.error("Failed to submit report:", err);
